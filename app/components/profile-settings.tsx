@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { calculateBMI } from "../utils/calculations"
-import { Save, AlertCircle, Download, Upload, CheckCircle } from "lucide-react"
+import { Save, AlertCircle, CheckCircle } from "lucide-react"
 // At the top, add the import for UserProfileDetails
 import UserProfileDetails from "./user-profile-details"
 // Add the import for Tabs components at the top
@@ -186,24 +186,6 @@ function ProfileSettingsForm() {
       setMessage({ type: "error", text: "An unexpected error occurred" })
     } finally {
       setIsUpdating(false)
-    }
-  }
-
-  const exportData = () => {
-    try {
-      const data = LocalDatabase.exportUserData(user.id)
-      const blob = new Blob([data], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `naijafit-data-${new Date().toISOString().split("T")[0]}.json`
-      link.click()
-      URL.revokeObjectURL(url)
-
-      setMessage({ type: "success", text: "Data exported successfully!" })
-      setTimeout(() => setMessage(null), 3000)
-    } catch (error) {
-      setMessage({ type: "error", text: "Failed to export data" })
     }
   }
 
@@ -494,49 +476,6 @@ function ProfileSettingsForm() {
               {isUpdating ? "Saving Changes..." : "Save Changes"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      {/* Data Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Management</CardTitle>
-          <CardDescription>Export or import your nutrition data</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button onClick={exportData} variant="outline" className="h-12 bg-background">
-                <Download className="h-4 w-4 mr-2" />
-                Export My Data
-              </Button>
-
-              <div>
-                <Input type="file" accept=".json" onChange={importData} className="hidden" id="import-file" />
-                <Button asChild variant="outline" className="w-full h-12 bg-background">
-                  <label htmlFor="import-file" className="cursor-pointer flex items-center justify-center">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import Data
-                  </label>
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <Button
-                onClick={() => window.open("https://github.com/Wolext4/nigerian-nutrition-app--2-/releases", "_blank")}
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download Latest App Version
-              </Button>
-            </div>
-
-            <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
-              Export includes your profile information and meal logs. This data can be imported into other devices or
-              used as a backup. Download the latest app version to get new features and improvements.
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

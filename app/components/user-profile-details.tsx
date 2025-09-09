@@ -5,13 +5,12 @@ import { useAuth } from "../contexts/auth-context"
 import { useMeals } from "../hooks/use-meals"
 import { useProfile } from "../hooks/use-profile"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
-import { User, Calendar, TrendingUp, Clock, BarChart3, PieChart, Download } from "lucide-react"
+import { User, Calendar, TrendingUp, Clock, BarChart3, PieChart } from "lucide-react"
 import type { Meal } from "@/lib/local-storage"
 
 interface WeekData {
@@ -145,36 +144,6 @@ export default function UserProfileDetails() {
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i)
 
-  const exportMonthlyData = () => {
-    const monthName = months[selectedMonth]
-    const exportData = {
-      user: {
-        name: user.fullName,
-        email: user.email,
-        bmi: bmiResult.bmi,
-        category: bmiResult.category,
-      },
-      period: `${monthName} ${selectedYear}`,
-      summary: {
-        totalMeals: monthlyTotals.meals,
-        averageDailyCalories: averageDailyCalories.toFixed(0),
-        totalCalories: monthlyTotals.calories.toFixed(0),
-        totalProtein: monthlyTotals.protein.toFixed(1),
-      },
-      weeklyBreakdown: weeklyData,
-      meals: meals,
-    }
-
-    const dataStr = JSON.stringify(exportData, null, 2)
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `naijafit-${monthName.toLowerCase()}-${selectedYear}.json`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
   return (
     <div className="space-y-6">
       {/* User Overview */}
@@ -299,11 +268,6 @@ export default function UserProfileDetails() {
                 </SelectContent>
               </Select>
             </div>
-
-            <Button onClick={exportMonthlyData} variant="outline" className="ml-auto bg-transparent">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
           </div>
 
           {/* Monthly Summary */}
