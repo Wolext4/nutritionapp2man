@@ -169,10 +169,33 @@ export class LocalDatabase {
         updatedAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
       },
+      {
+        id: uuidv4(),
+        email: "admin@gluguide.com",
+        fullName: "GluGuide Administrator",
+        age: 35,
+        gender: "other",
+        height: 170,
+        weight: 70,
+        location: "Nigeria",
+        occupation: "System Administrator",
+        healthConditions: [],
+        fitnessGoals: [],
+        role: "admin",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+      },
     ]
 
     // Save demo users
     setToStorage(STORAGE_KEYS.USERS, demoUsers)
+
+    const demoPasswords: Record<string, string> = {
+      [demoUsers[0].id]: "demo123", // Demo user password
+      [demoUsers[1].id]: "admin2024!", // Admin password - CHANGE THIS
+    }
+    setToStorage(STORAGE_KEYS.PASSWORDS, demoPasswords)
 
     // Create basic user profiles without food preferences
     const demoProfiles: UserProfile[] = [
@@ -204,6 +227,44 @@ export class LocalDatabase {
             calorieTarget: 2000,
             proteinTarget: 120,
             exerciseDays: 4,
+          },
+        },
+        personalizedRecommendations: {
+          suggestedFoods: [],
+          avoidFoods: [],
+          mealPlanPreferences: "balanced_nigerian",
+          supplementSuggestions: [],
+        },
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        userId: demoUsers[1].id,
+        preferences: {
+          culturalBackground: ["general-nigerian"],
+          dietaryRestrictions: [],
+          activityLevel: "moderate",
+          healthGoals: ["system_management"],
+          favoriteNigerianFoods: [],
+          mealPreferences: {
+            breakfast: [],
+            lunch: [],
+            dinner: [],
+            snacks: [],
+          },
+        },
+        settings: {
+          notifications: false,
+          dataSharing: false,
+          units: "metric",
+          reminderTimes: {
+            breakfast: "07:00",
+            lunch: "12:00",
+            dinner: "19:00",
+          },
+          weeklyGoals: {
+            calorieTarget: 2000,
+            proteinTarget: 100,
+            exerciseDays: 3,
           },
         },
         personalizedRecommendations: {
