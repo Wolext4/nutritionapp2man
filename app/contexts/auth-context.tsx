@@ -33,11 +33,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [showTutorial, setShowTutorial] = useState(false)
 
   useEffect(() => {
-    checkAuth()
+    if (typeof window !== "undefined") {
+      // Initialize database with demo users on client side
+      LocalDatabase.initialize()
+      checkAuth()
+    } else {
+      setIsLoading(false)
+    }
   }, [])
 
   const checkAuth = async () => {
     try {
+      if (typeof window === "undefined") {
+        setIsLoading(false)
+        return
+      }
+
       const currentUser = LocalDatabase.getCurrentUser()
       setUser(currentUser)
       if (currentUser) {
@@ -56,19 +67,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      if (typeof window !== "undefined") {
+        LocalDatabase.initialize()
+      }
+
       const result = await LocalDatabase.loginUser(email, password)
 
       if (result.success && result.user) {
         setUser(result.user)
-        const tutorialCompleted = localStorage.getItem(`tutorial_completed_${result.user.id}`) === "true"
-        if (!tutorialCompleted) {
-          setShowTutorial(true)
+        if (typeof window !== "undefined") {
+          const tutorialCompleted = localStorage.getItem(`tutorial_completed_${result.user.id}`) === "true"
+          if (!tutorialCompleted) {
+            setShowTutorial(true)
+          }
         }
         return { success: true }
       } else {
         return { success: false, error: result.error || "Login failed" }
       }
     } catch (error) {
+      console.error("Login error:", error)
       return { success: false, error: "An unexpected error occurred" }
     }
   }
@@ -132,14 +150,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const completeTutorial = () => {
     setShowTutorial(false)
-    // Store tutorial completion in localStorage
-    localStorage.setItem(`tutorial_completed_${user?.id}`, "true")
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`tutorial_completed_${user?.id}`, "true")
+    }
   }
 
   const skipTutorial = () => {
     setShowTutorial(false)
-    // Store tutorial skip in localStorage
-    localStorage.setItem(`tutorial_completed_${user?.id}`, "true")
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`tutorial_completed_${user?.id}`, "true")
+    }
   }
 
   return (

@@ -146,14 +146,14 @@ function setToStorage<T>(key: string, value: T): void {
 export class LocalDatabase {
   // Initialize with demo data and personalized content
   static initialize(): void {
-    if (this.isInitialized()) {
-      return
-    }
+    if (typeof window === "undefined") return
+
+    console.log("[v0] Initializing LocalDatabase...")
 
     // Create basic demo users without meal data
     const demoUsers: User[] = [
       {
-        id: uuidv4(),
+        id: "demo-user-id-12345",
         email: "test@naijafit.com",
         fullName: "Adunni Okafor",
         age: 28,
@@ -170,7 +170,7 @@ export class LocalDatabase {
         lastLoginAt: new Date().toISOString(),
       },
       {
-        id: uuidv4(),
+        id: "admin-user-id-67890",
         email: "admin@gluguide.com",
         fullName: "GluGuide Administrator",
         age: 35,
@@ -188,24 +188,51 @@ export class LocalDatabase {
       },
     ]
 
-    // Save demo users
-    setToStorage(STORAGE_KEYS.USERS, demoUsers)
+    const existingUsers = getFromStorage<User[]>(STORAGE_KEYS.USERS, [])
+    const existingEmails = new Set(existingUsers.map((u) => u.email))
 
-    const demoPasswords: Record<string, string> = {
-      [demoUsers[0].id]: "demo123", // Demo user password
-      [demoUsers[1].id]: "admin2024!", // Admin password - CHANGE THIS
+    const usersToAdd = demoUsers.filter((user) => !existingEmails.has(user.email))
+    if (usersToAdd.length > 0) {
+      const updatedUsers = [...existingUsers, ...usersToAdd]
+      setToStorage(STORAGE_KEYS.USERS, updatedUsers)
+      console.log(
+        "[v0] Added missing demo users:",
+        usersToAdd.map((u) => u.email),
+      )
     }
-    setToStorage(STORAGE_KEYS.PASSWORDS, demoPasswords)
 
-    // Create basic user profiles without food preferences
-    const demoProfiles: UserProfile[] = [
-      {
-        userId: demoUsers[0].id,
+    const existingPasswords = getFromStorage<Record<string, string>>(STORAGE_KEYS.PASSWORDS, {})
+    const demoPasswords: Record<string, string> = {
+      "demo-user-id-12345": "demo123",
+      "admin-user-id-67890": "admin2024!",
+    }
+
+    // Add missing passwords
+    let passwordsUpdated = false
+    for (const [userId, password] of Object.entries(demoPasswords)) {
+      if (!existingPasswords[userId]) {
+        existingPasswords[userId] = password
+        passwordsUpdated = true
+      }
+    }
+
+    if (passwordsUpdated) {
+      setToStorage(STORAGE_KEYS.PASSWORDS, existingPasswords)
+      console.log("[v0] Updated demo user passwords")
+    }
+
+    const existingProfiles = getFromStorage<UserProfile[]>(STORAGE_KEYS.PROFILES, [])
+    const existingProfileUserIds = new Set(existingProfiles.map((p) => p.userId))
+
+    const profilesToAdd = demoUsers
+      .filter((user) => !existingProfileUserIds.has(user.id))
+      .map((user) => ({
+        userId: user.id,
         preferences: {
-          culturalBackground: ["yoruba", "general-nigerian"],
+          culturalBackground: user.id === "demo-user-id-12345" ? ["yoruba", "general-nigerian"] : ["general-nigerian"],
           dietaryRestrictions: [],
-          activityLevel: "moderate",
-          healthGoals: ["balanced", "muscle-gain"],
+          activityLevel: "moderate" as const,
+          healthGoals: user.id === "demo-user-id-12345" ? ["balanced", "muscle-gain"] : ["system_management"],
           favoriteNigerianFoods: [],
           mealPreferences: {
             breakfast: [],
@@ -215,9 +242,9 @@ export class LocalDatabase {
           },
         },
         settings: {
-          notifications: true,
+          notifications: user.id === "demo-user-id-12345",
           dataSharing: false,
-          units: "metric",
+          units: "metric" as const,
           reminderTimes: {
             breakfast: "07:30",
             lunch: "12:30",
@@ -225,8 +252,8 @@ export class LocalDatabase {
           },
           weeklyGoals: {
             calorieTarget: 2000,
-            proteinTarget: 120,
-            exerciseDays: 4,
+            proteinTarget: user.id === "demo-user-id-12345" ? 120 : 100,
+            exerciseDays: user.id === "demo-user-id-12345" ? 4 : 3,
           },
         },
         personalizedRecommendations: {
@@ -236,53 +263,22 @@ export class LocalDatabase {
           supplementSuggestions: [],
         },
         updatedAt: new Date().toISOString(),
-      },
-      {
-        userId: demoUsers[1].id,
-        preferences: {
-          culturalBackground: ["general-nigerian"],
-          dietaryRestrictions: [],
-          activityLevel: "moderate",
-          healthGoals: ["system_management"],
-          favoriteNigerianFoods: [],
-          mealPreferences: {
-            breakfast: [],
-            lunch: [],
-            dinner: [],
-            snacks: [],
-          },
-        },
-        settings: {
-          notifications: false,
-          dataSharing: false,
-          units: "metric",
-          reminderTimes: {
-            breakfast: "07:00",
-            lunch: "12:00",
-            dinner: "19:00",
-          },
-          weeklyGoals: {
-            calorieTarget: 2000,
-            proteinTarget: 100,
-            exerciseDays: 3,
-          },
-        },
-        personalizedRecommendations: {
-          suggestedFoods: [],
-          avoidFoods: [],
-          mealPlanPreferences: "balanced_nigerian",
-          supplementSuggestions: [],
-        },
-        updatedAt: new Date().toISOString(),
-      },
-    ]
+      }))
 
-    setToStorage(STORAGE_KEYS.PROFILES, demoProfiles)
+    if (profilesToAdd.length > 0) {
+      const updatedProfiles = [...existingProfiles, ...profilesToAdd]
+      setToStorage(STORAGE_KEYS.PROFILES, updatedProfiles)
+      console.log("[v0] Added missing demo user profiles")
+    }
 
-    setToStorage(STORAGE_KEYS.MEALS, [])
+    const existingMeals = getFromStorage<Meal[]>(STORAGE_KEYS.MEALS, [])
+    if (existingMeals.length === 0) {
+      setToStorage(STORAGE_KEYS.MEALS, [])
+    }
 
     // Mark as initialized
     setToStorage(STORAGE_KEYS.INITIALIZED, true)
+    console.log("[v0] LocalDatabase initialization complete")
   }
 
   static isInitialized(): boolean {
@@ -400,16 +396,27 @@ export class LocalDatabase {
   }
 
   static async loginUser(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
+    console.log("[v0] Login attempt for:", email)
+
     const users = this.getUsers()
+    console.log(
+      "[v0] Available users:",
+      users.map((u) => ({ email: u.email, id: u.id })),
+    )
+
     const user = users.find((u) => u.email === email.toLowerCase())
 
     if (!user) {
+      console.log("[v0] User not found for email:", email)
       return { success: false, error: "Invalid email or password" }
     }
 
     // Check password
     const passwords = getFromStorage<Record<string, string>>(STORAGE_KEYS.PASSWORDS, {})
+    console.log("[v0] Checking password for user:", user.id)
+
     if (passwords[user.id] !== password) {
+      console.log("[v0] Password mismatch for user:", user.id)
       return { success: false, error: "Invalid email or password" }
     }
 
@@ -420,6 +427,7 @@ export class LocalDatabase {
     // Set current user
     setToStorage(STORAGE_KEYS.CURRENT_USER, user)
 
+    console.log("[v0] Login successful for:", user.email)
     return { success: true, user }
   }
 
