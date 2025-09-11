@@ -42,10 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser)
       if (currentUser) {
         const tutorialCompleted = localStorage.getItem(`tutorial_completed_${currentUser.id}`) === "true"
-        const isAdmin = currentUser.role === "admin"
 
-        // Show tutorial if not completed OR if user is admin (admin always sees tutorial)
-        if (!tutorialCompleted || isAdmin) {
+        if (!tutorialCompleted) {
           setShowTutorial(true)
         }
       }
@@ -62,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (result.success && result.user) {
         setUser(result.user)
-        const isAdmin = result.user.role === "admin"
-        if (isAdmin) {
+        const tutorialCompleted = localStorage.getItem(`tutorial_completed_${result.user.id}`) === "true"
+        if (!tutorialCompleted) {
           setShowTutorial(true)
         }
         return { success: true }

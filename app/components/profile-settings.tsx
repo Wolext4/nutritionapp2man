@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { calculateBMI } from "../utils/calculations"
-import { Save, AlertCircle, CheckCircle } from "lucide-react"
+import { Save, AlertCircle, CheckCircle, Download, Upload } from "lucide-react"
 // At the top, add the import for UserProfileDetails
 import UserProfileDetails from "./user-profile-details"
 // Add the import for Tabs components at the top
@@ -52,6 +52,11 @@ function ProfileSettingsForm() {
   const { profile, updateProfile: updateUserProfile } = useProfile()
   const [isUpdating, setIsUpdating] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportMonth, setExportMonth] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+  })
 
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
@@ -79,6 +84,69 @@ function ProfileSettingsForm() {
     formData.height && formData.weight
       ? calculateBMI(Number.parseFloat(formData.weight), Number.parseFloat(formData.height))
       : null
+
+  const exportMonthlyLogs = async () => {
+    if (!user) return
+
+    setIsExporting(true)
+    try {
+      const [year, month] = exportMonth.split("-")
+      const startDate = `${year}-${month}-01`
+      const endDate = new Date(Number.parseInt(year), Number.parseInt(month), 0).toISOString().split("T")[0]
+
+      const meals = LocalDatabase.getUserMeals(user.id, startDate, endDate)
+      const userProfile = LocalDatabase.getUserProfile(user.id)
+      const userStats = LocalDatabase.getUserStatsById(user.id)
+
+      const exportData = {
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+        },
+        meals,
+        profile: userProfile,
+        stats: userStats,
+        exportPeriod: {
+          month: Number.parseInt(month),
+          year: Number.parseInt(year),
+          startDate,
+          endDate,
+        },
+        exportDate: new Date().toISOString(),
+        totalMeals: meals.length,
+        summary: {
+          totalCalories: meals.reduce((sum, m) => sum + m.totalNutrition.calories, 0),
+          avgDailyCalories:
+            meals.length > 0
+              ? meals.reduce((sum, m) => sum + m.totalNutrition.calories, 0) / new Set(meals.map((m) => m.date)).size
+              : 0,
+          totalProtein: meals.reduce((sum, m) => sum + m.totalNutrition.protein, 0),
+          totalCarbs: meals.reduce((sum, m) => sum + m.totalNutrition.carbs, 0),
+          totalFats: meals.reduce((sum, m) => sum + m.totalNutrition.fats, 0),
+        },
+      }
+
+      const jsonString = JSON.stringify(exportData, null, 2)
+      const blob = new Blob([jsonString], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `nutrition-logs-${year}-${month}-${user.fullName.replace(/\s+/g, "-")}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      setMessage({ type: "success", text: `Monthly logs for ${month}/${year} exported successfully!` })
+      setTimeout(() => setMessage(null), 3000)
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to export monthly logs" })
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -253,43 +321,131 @@ function ProfileSettingsForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Export Monthly Logs</CardTitle>
+          <CardDescription>Download your nutrition data for a specific month</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Label htmlFor="export-month" className="text-sm">
+                Select Month
+              </Label>
+              <Input
+                id="export-month"
+                type="month"
+                value={exportMonth}
+                onChange={(e) => setExportMonth(e.target.value)}
+                className="bg-background text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button
+                onClick={exportMonthlyLogs}
+                disabled={isExporting}
+                className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-4 text-sm"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? "Exporting..." : "Export"}
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Export includes meals, nutrition summary, and progress data for the selected month.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Data Management</CardTitle>
+          <CardDescription>Import or backup your complete nutrition data</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Label htmlFor="import-data" className="text-sm">
+                Import Data
+              </Label>
+              <Input
+                id="import-data"
+                type="file"
+                accept=".json"
+                onChange={importData}
+                className="bg-background text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button
+                onClick={() => {
+                  const data = LocalDatabase.exportUserData(user.id)
+                  const blob = new Blob([data], { type: "application/json" })
+                  const url = URL.createObjectURL(blob)
+                  const link = document.createElement("a")
+                  link.href = url
+                  link.download = `nutrition-backup-${new Date().toISOString().split("T")[0]}.json`
+                  document.body.appendChild(link)
+                  link.click()
+                  document.body.removeChild(link)
+                  URL.revokeObjectURL(url)
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white h-9 px-4 text-sm"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Backup All
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Backup your complete profile or import previously exported data.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Edit Profile Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Edit Profile</CardTitle>
+          <CardTitle className="text-lg">Edit Profile</CardTitle>
           <CardDescription>Update your information to get more accurate recommendations</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="fullName" className="text-sm">
+                  Full Name *
+                </Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
-                  className="bg-background"
+                  className="bg-background h-9 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-sm">
+                  Email *
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="bg-background"
+                  className="bg-background h-9 text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="age">Age *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="age" className="text-sm">
+                  Age *
+                </Label>
                 <Input
                   id="age"
                   type="number"
@@ -298,11 +454,13 @@ function ProfileSettingsForm() {
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                   required
-                  className="bg-background"
+                  className="bg-background h-9 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="height">Height (cm) *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="height" className="text-sm">
+                  Height (cm) *
+                </Label>
                 <Input
                   id="height"
                   type="number"
@@ -312,11 +470,13 @@ function ProfileSettingsForm() {
                   value={formData.height}
                   onChange={(e) => setFormData({ ...formData, height: e.target.value })}
                   required
-                  className="bg-background"
+                  className="bg-background h-9 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="weight">Weight (kg) *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="weight" className="text-sm">
+                  Weight (kg) *
+                </Label>
                 <Input
                   id="weight"
                   type="number"
@@ -326,15 +486,17 @@ function ProfileSettingsForm() {
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                   required
-                  className="bg-background"
+                  className="bg-background h-9 text-sm"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender *</Label>
+            <div className="space-y-1">
+              <Label htmlFor="gender" className="text-sm">
+                Gender *
+              </Label>
               <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                <SelectTrigger className="bg-background">
+                <SelectTrigger className="bg-background h-9">
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
@@ -344,26 +506,6 @@ function ProfileSettingsForm() {
                 </SelectContent>
               </Select>
             </div>
-
-            {newBMI && hasChanges && (
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <h4 className="font-medium mb-2">Updated BMI Preview:</h4>
-                <div className="flex items-center gap-4">
-                  <div className="text-2xl font-bold">{newBMI.bmi}</div>
-                  <div className="text-sm">
-                    <div className="font-medium">{newBMI.category}</div>
-                    <div className="text-muted-foreground">
-                      {currentBMI.bmi !== newBMI.bmi && (
-                        <span>
-                          {newBMI.bmi > currentBMI.bmi ? "↑" : "↓"}
-                          {Math.abs(newBMI.bmi - currentBMI.bmi).toFixed(1)} from current
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Cultural Food Preferences */}
             <div className="space-y-4">
@@ -407,13 +549,15 @@ function ProfileSettingsForm() {
             </div>
 
             {/* Activity Level */}
-            <div className="space-y-2">
-              <Label htmlFor="activity">Activity Level</Label>
+            <div className="space-y-1">
+              <Label htmlFor="activity" className="text-sm">
+                Activity Level
+              </Label>
               <Select
                 value={profileData.activityLevel}
                 onValueChange={(value) => setProfileData({ ...profileData, activityLevel: value })}
               >
-                <SelectTrigger className="bg-background">
+                <SelectTrigger className="bg-background h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -471,7 +615,7 @@ function ProfileSettingsForm() {
               </div>
             )}
 
-            <Button type="submit" disabled={isUpdating} className="w-full bg-green-600 hover:bg-green-700 h-12">
+            <Button type="submit" disabled={isUpdating} className="w-full bg-green-600 hover:bg-green-700 h-10 text-sm">
               <Save className="h-4 w-4 mr-2" />
               {isUpdating ? "Saving Changes..." : "Save Changes"}
             </Button>

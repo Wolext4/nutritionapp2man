@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/auth-context"
 import { LocalDatabase, type Meal } from "@/lib/local-storage"
 
@@ -10,7 +10,7 @@ export function useMeals(date?: string, startDate?: string, endDate?: string) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchMeals = async () => {
+  const fetchMeals = useCallback(async () => {
     if (!user) {
       setMeals([])
       return
@@ -38,7 +38,7 @@ export function useMeals(date?: string, startDate?: string, endDate?: string) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, date, startDate, endDate])
 
   const addMeal = async (mealData: {
     type: "breakfast" | "lunch" | "dinner" | "snack"
@@ -116,7 +116,7 @@ export function useMeals(date?: string, startDate?: string, endDate?: string) {
 
   useEffect(() => {
     fetchMeals()
-  }, [user, date, startDate, endDate])
+  }, [fetchMeals])
 
   return {
     meals,

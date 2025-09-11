@@ -1,33 +1,34 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Hand, Eye } from "lucide-react"
+import { Hand } from "lucide-react"
+import Image from "next/image"
 
 interface PortionSize {
   id: string
   foodType: string
   handMethod: string
-  imagePlaceholder: string
+  imageSrc: string
 }
 
 const portionSizes: PortionSize[] = [
   {
-    id: "small-portion",
-    foodType: "Small Portion",
+    id: "grains-portion",
+    foodType: "1 portion of Grains",
     handMethod: "Cupped palm",
-    imagePlaceholder: "ADD_SMALL_PORTION_IMAGE_HERE",
+    imageSrc: "/images/fruits.png",
   },
   {
-    id: "medium-portion",
-    foodType: "Medium Portion",
+    id: "swallow-portion",
+    foodType: "1 Portion of swallow",
     handMethod: "Closed fist",
-    imagePlaceholder: "ADD_MEDIUM_PORTION_IMAGE_HERE",
+    imageSrc: "/images/carbohydrate-portion.png",
   },
   {
-    id: "large-portion",
-    foodType: "Large Portion",
+    id: "vegetables-portion",
+    foodType: "1 portion of vegetables",
     handMethod: "Two cupped palms",
-    imagePlaceholder: "ADD_LARGE_PORTION_IMAGE_HERE",
+    imageSrc: "/images/fruits.png",
   },
 ]
 
@@ -38,7 +39,24 @@ export default function PortionSizingGuide() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Hand className="h-5 w-5 text-blue-600" />
-            Grains & Swallows Portion Guide
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-hand h-5 w-5 text-blue-600"
+            >
+              <path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"></path>
+              <path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"></path>
+              <path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"></path>
+              <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+            </svg>
+            Grains, Swallows &amp; Vegetables Portion Guide
           </CardTitle>
           <CardDescription>
             Learn to estimate proper portion sizes for grains and swallows using your hands
@@ -52,10 +70,14 @@ export default function PortionSizingGuide() {
                   <CardTitle className="text-lg text-center">{portion.foodType}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="aspect-square bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center p-6 text-center">
-                    <Eye className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                    <p className="text-sm text-muted-foreground font-medium">{portion.imagePlaceholder}</p>
-                    <p className="text-xs text-muted-foreground/70 mt-2">Add your fist sizing image here</p>
+                  <div className="aspect-square bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+                    <Image
+                      src={portion.imageSrc || "/placeholder.svg"}
+                      alt={`${portion.foodType} hand measurement`}
+                      width={200}
+                      height={200}
+                      className="object-cover rounded-lg"
+                    />
                   </div>
 
                   <div className="text-center space-y-2">
@@ -71,10 +93,10 @@ export default function PortionSizingGuide() {
           </div>
 
           <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">How to Add Your Portion Images</h4>
+            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Portion Guide Instructions</h4>
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              Replace the placeholder text in each card with actual images showing the hand sizing methods for your
-              grains and swallows portions.
+              Use these hand measurements to estimate proper portion sizes for grains, swallows, and vegetables in your
+              daily meals.
             </p>
           </div>
         </CardContent>

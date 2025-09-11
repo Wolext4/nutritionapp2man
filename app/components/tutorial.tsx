@@ -316,7 +316,7 @@ export default function Tutorial({ onComplete, onSkip }: TutorialProps) {
               onClick={nextStep}
               className="flex items-center gap-2 px-8 py-3 text-base h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg"
             >
-              {currentStep === tutorialSteps.length - 1 ? "Get Started" : "Next"}
+              {currentStep === tutorialSteps.length - 1 ? "Done" : "Next"}
               <ChevronRight className="h-5 w-5" />
             </Button>
           </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/auth-context"
 import { useMeals } from "../hooks/use-meals"
-import { useTheme } from "../contexts/theme-context"
+import { useTheme } from "next-themes"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  Monitor,
   Activity,
   Target,
   TrendingUp,
@@ -22,6 +23,8 @@ import {
   PlusCircle,
   Trash2,
   User,
+  Utensils,
+  Shield,
 } from "lucide-react"
 import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
 import MealLogger from "./meal-logger"
@@ -30,16 +33,32 @@ import NutritionSummary from "./nutrition-summary"
 import Recommendations from "./recommendations"
 import PersonalizedWelcome from "./personalized-welcome"
 import ProfileSettings from "./profile-settings"
+import AdminDashboard from "./admin-dashboard"
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState("overview")
 
   const today = new Date().toISOString().split("T")[0]
   const { meals: todaysMeals, deleteMeal, isLoading: mealsLoading, refetch } = useMeals(today)
 
-  // Add useEffect to refetch meals when tab changes back to overview
+  const toggleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark")
+    } else if (theme === "dark") {
+      setTheme("system")
+    } else {
+      setTheme("light")
+    }
+  }
+
+  const getThemeIcon = () => {
+    if (theme === "light") return <Sun className="h-3 w-3 xs:h-4 xs:w-4" />
+    if (theme === "dark") return <Moon className="h-3 w-3 xs:h-4 xs:w-4" />
+    return <Monitor className="h-3 w-3 xs:h-4 xs:w-4" />
+  }
+
   useEffect(() => {
     if (activeTab === "overview") {
       refetch()
@@ -58,36 +77,42 @@ export default function Dashboard() {
     if (confirm("Are you sure you want to delete this meal?")) {
       const result = await deleteMeal(mealId)
       if (result.success) {
-        // Refresh the data after successful deletion
         refetch()
       }
     }
   }
 
+  const isAdmin = user.role === "admin"
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Apple className="h-8 w-8 text-green-600" />
-              <h1 className="text-2xl font-bold text-green-800">GluGuide</h1>
+    <div className="min-h-screen-safe bg-background">
+      <header className="border-b bg-card sticky top-0 z-50 pt-safe-top">
+        <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-12 xs:h-14">
+            <div className="flex items-center gap-1 xs:gap-2">
+              <Utensils className="h-5 w-5 xs:h-6 xs:w-6 text-green-600" />
+              <h1 className="text-base xs:text-lg sm:text-xl font-bold text-green-800">GluGuide</h1>
+              {isAdmin && (
+                <Badge variant="secondary" className="text-xs">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Admin
+                </Badge>
+              )}
             </div>
 
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
-                {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            <div className="flex items-center gap-1 xs:gap-2">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-7 w-7 xs:h-8 xs:w-8">
+                {getThemeIcon()}
               </Button>
 
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("profile")}
-                className="flex items-center gap-3 hover:bg-muted/50 rounded-lg p-2"
+                className="flex items-center gap-1 xs:gap-2 hover:bg-muted/50 rounded-lg p-1 xs:p-1.5"
               >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  <AvatarFallback className="bg-green-600 text-white text-sm">
+                <Avatar className="h-5 w-5 xs:h-6 xs:w-6">
+                  <AvatarImage src="/placeholder.svg?height=24&width=24" />
+                  <AvatarFallback className="bg-green-600 text-white text-xs">
                     {user.fullName
                       .split(" ")
                       .map((n) => n[0])
@@ -96,9 +121,9 @@ export default function Dashboard() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium">{user.fullName}</p>
+                  <p className="text-xs font-medium">{user.fullName}</p>
                   <p className="text-xs text-muted-foreground">
-                    BMI: {bmiResult.bmi} ({bmiResult.category})
+                    {isAdmin ? "Administrator" : `BMI: ${bmiResult.bmi} (${bmiResult.category})`}
                   </p>
                 </div>
               </Button>
@@ -107,68 +132,99 @@ export default function Dashboard() {
                 variant="ghost"
                 size="icon"
                 onClick={logout}
-                className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50 h-7 w-7 xs:h-8 xs:w-8"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-3 w-3 xs:h-4 xs:w-4" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 lg:w-fit lg:grid-cols-6">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Overview</span>
+      <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6 py-3 xs:py-4 sm:py-6 pb-safe-bottom">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 xs:space-y-4">
+          <TabsList
+            className={`grid w-full ${isAdmin ? "grid-cols-3 xs:grid-cols-7 lg:w-fit lg:grid-cols-7" : "grid-cols-3 xs:grid-cols-6 lg:w-fit lg:grid-cols-6"} h-auto p-0.5`}
+          >
+            <TabsTrigger
+              value="overview"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <Activity className="h-3 w-3" />
+              <span className="xs:hidden">Over</span>
+              <span className="hidden xs:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="log-meal" className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Log Meal</span>
+            <TabsTrigger
+              value="log-meal"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <PlusCircle className="h-3 w-3" />
+              <span className="xs:hidden">Log</span>
+              <span className="hidden xs:inline">Log Meal</span>
             </TabsTrigger>
-            <TabsTrigger value="bmi" className="flex items-center gap-2">
-              <Calculator className="h-4 w-4" />
-              <span className="hidden sm:inline">BMI</span>
+            <TabsTrigger
+              value="bmi"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <Calculator className="h-3 w-3" />
+              <span>BMI</span>
             </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span className="hidden sm:inline">Nutrition</span>
+            <TabsTrigger
+              value="nutrition"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <TrendingUp className="h-3 w-3" />
+              <span className="xs:hidden">Nutr</span>
+              <span className="hidden xs:inline">Nutrition</span>
             </TabsTrigger>
-            <TabsTrigger value="recommendations" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">Tips</span>
+            <TabsTrigger
+              value="recommendations"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <BookOpen className="h-3 w-3" />
+              <span>Tips</span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Profile</span>
+            <TabsTrigger
+              value="profile"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <User className="h-3 w-3" />
+              <span className="xs:hidden">Prof</span>
+              <span className="hidden xs:inline">Profile</span>
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger
+                value="admin"
+                className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+              >
+                <Shield className="h-3 w-3" />
+                <span className="xs:hidden">Admin</span>
+                <span className="hidden xs:inline">Admin</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Personalized Welcome Section */}
+          <TabsContent value="overview" className="space-y-3 xs:space-y-4">
             <PersonalizedWelcome />
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Target className="h-5 w-5 text-green-600" />
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4">
+              <Card className="xs:col-span-2 lg:col-span-1">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm xs:text-base flex items-center gap-1 xs:gap-2">
+                    <Target className="h-3 w-3 xs:h-4 xs:w-4 text-green-600" />
                     Today's Calories
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-2xl font-bold">{totalCaloriesToday.toFixed(0)}</div>
-                    <div className="text-sm text-muted-foreground">of {dailyCalories} recommended</div>
+                  <div className="space-y-1 xs:space-y-2">
+                    <div className="text-lg xs:text-xl font-bold">{totalCaloriesToday.toFixed(0)}</div>
+                    <div className="text-xs text-muted-foreground">of {dailyCalories} recommended</div>
                     <div className="text-xs text-muted-foreground">
                       {totalProteinToday.toFixed(1)}g protein • {todaysMeals.length} meals
                     </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
+                    <div className="w-full bg-secondary rounded-full h-1.5 xs:h-2">
                       <div
-                        className="bg-green-600 h-2 rounded-full transition-all"
+                        className="bg-green-600 h-1.5 xs:h-2 rounded-full transition-all"
                         style={{ width: `${Math.min((totalCaloriesToday / dailyCalories) * 100, 100)}%` }}
                       />
                     </div>
@@ -177,15 +233,15 @@ export default function Dashboard() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-blue-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm xs:text-base flex items-center gap-1 xs:gap-2">
+                    <Activity className="h-3 w-3 xs:h-4 xs:w-4 text-blue-600" />
                     BMI Status
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-2xl font-bold">{bmiResult.bmi}</div>
+                  <div className="space-y-1 xs:space-y-2">
+                    <div className="text-lg xs:text-xl font-bold">{bmiResult.bmi}</div>
                     <Badge
                       variant={
                         bmiResult.category === "Normal"
@@ -194,6 +250,7 @@ export default function Dashboard() {
                             ? "secondary"
                             : "destructive"
                       }
+                      className="text-xs"
                     >
                       {bmiResult.category}
                     </Badge>
@@ -202,16 +259,16 @@ export default function Dashboard() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Apple className="h-5 w-5 text-orange-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm xs:text-base flex items-center gap-1 xs:gap-2">
+                    <Apple className="h-3 w-3 xs:h-4 xs:w-4 text-orange-600" />
                     Meals Today
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-2xl font-bold">{todaysMeals.length}</div>
-                    <div className="text-sm text-muted-foreground">
+                  <div className="space-y-1 xs:space-y-2">
+                    <div className="text-lg xs:text-xl font-bold">{todaysMeals.length}</div>
+                    <div className="text-xs text-muted-foreground">
                       {todaysMeals.length === 0
                         ? "No meals logged"
                         : todaysMeals.length === 1
@@ -229,55 +286,62 @@ export default function Dashboard() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm xs:text-base flex items-center gap-1 xs:gap-2">
+                    <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4 text-purple-600" />
                     Weight Goal
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-lg font-bold">
+                  <div className="space-y-1 xs:space-y-2">
+                    <div className="text-sm xs:text-base font-bold">
                       {bmiResult.category === "Underweight"
                         ? "Gain Weight"
                         : bmiResult.category === "Overweight" || bmiResult.category === "Obese"
                           ? "Lose Weight"
                           : "Maintain"}
                     </div>
-                    <div className="text-sm text-muted-foreground">Current: {user.weight}kg</div>
+                    <div className="text-xs text-muted-foreground">Current: {user.weight}kg</div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Recent Meals */}
             <Card>
               <CardHeader>
-                <CardTitle>Today's Meals</CardTitle>
-                <CardDescription>Your food intake for today</CardDescription>
+                <CardTitle className="text-sm xs:text-base">Today's Meals</CardTitle>
+                <CardDescription className="text-xs">Your food intake for today</CardDescription>
               </CardHeader>
               <CardContent>
                 {mealsLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-muted-foreground mt-2">Loading meals...</p>
+                  <div className="text-center py-4 xs:py-6">
+                    <div className="animate-spin rounded-full h-5 w-5 xs:h-6 xs:w-6 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="text-muted-foreground mt-2 text-xs">Loading meals...</p>
                   </div>
                 ) : todaysMeals.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Apple className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No meals logged today</p>
-                    <Button onClick={() => setActiveTab("log-meal")} className="mt-4 bg-green-600 hover:bg-green-700">
+                  <div className="text-center py-4 xs:py-6">
+                    <Apple className="h-6 w-6 xs:h-8 xs:w-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground text-xs">No meals logged today</p>
+                    <Button
+                      onClick={() => setActiveTab("log-meal")}
+                      className="mt-3 bg-green-600 hover:bg-green-700 text-xs h-8"
+                    >
                       Log Your First Meal
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-2 xs:space-y-3">
                     {todaysMeals.map((meal) => (
-                      <div key={meal.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline">{meal.type}</Badge>
-                            <span className="text-sm text-muted-foreground">{meal.time}</span>
+                      <div
+                        key={meal.id}
+                        className="flex flex-col xs:flex-row xs:items-center justify-between p-2 xs:p-3 border rounded-lg gap-2 xs:gap-0"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1 xs:gap-2 mb-1 flex-wrap">
+                            <Badge variant="outline" className="text-xs">
+                              {meal.type}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">{meal.time}</span>
                             {meal.mood && (
                               <Badge variant="outline" className="text-xs">
                                 {meal.mood === "great"
@@ -291,15 +355,19 @@ export default function Dashboard() {
                               </Badge>
                             )}
                           </div>
-                          <div className="font-medium">{meal.foods.map((food) => food.name).join(", ")}</div>
+                          <div className="font-medium text-xs xs:text-sm">
+                            {meal.foods.map((food) => food.name).join(", ")}
+                          </div>
                           {meal.notes && (
-                            <div className="text-sm text-muted-foreground italic mt-1">"{meal.notes}"</div>
+                            <div className="text-xs text-muted-foreground italic mt-1">"{meal.notes}"</div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between xs:justify-end gap-2">
                           <div className="text-right">
-                            <div className="font-bold">{meal.totalNutrition.calories.toFixed(0)} cal</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="font-bold text-xs xs:text-sm">
+                              {meal.totalNutrition.calories.toFixed(0)} cal
+                            </div>
+                            <div className="text-xs text-muted-foreground">
                               {meal.totalNutrition.protein.toFixed(1)}g protein
                             </div>
                           </div>
@@ -307,9 +375,9 @@ export default function Dashboard() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteMeal(meal.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </div>
@@ -319,18 +387,17 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Recommendations */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Health Tips</CardTitle>
-                <CardDescription>Based on your BMI and today's intake</CardDescription>
+                <CardTitle className="text-sm xs:text-base">Quick Health Tips</CardTitle>
+                <CardDescription className="text-xs">Based on your BMI and today's intake</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 xs:space-y-3">
                   {bmiResult.recommendations.slice(0, 3).map((rec, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0" />
-                      <p className="text-sm">{rec}</p>
+                    <div key={index} className="flex items-start gap-2 xs:gap-3 p-2 xs:p-3 bg-muted/50 rounded-lg">
+                      <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-green-600 rounded-full mt-1.5 xs:mt-2 flex-shrink-0" />
+                      <p className="text-xs xs:text-sm">{rec}</p>
                     </div>
                   ))}
                 </div>
@@ -357,6 +424,12 @@ export default function Dashboard() {
           <TabsContent value="profile">
             <ProfileSettings />
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="admin">
+              <AdminDashboard />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

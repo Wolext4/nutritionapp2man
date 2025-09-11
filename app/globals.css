@@ -4,48 +4,75 @@
 
 @layer base {
   :root {
+    /* Updated color tokens to match modern design brief */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 27%;
+    --card: 0 0% 99%;
+    --card-foreground: 215 25% 27%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
-    --radius: 0.5rem;
+    --popover-foreground: 215 25% 27%;
+    --primary: 0 74% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 215 25% 27%;
+    --destructive: 0 74% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 0 0% 100%;
+    --ring: 0 74% 42%;
+    --chart-1: 0 74% 42%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 215 25% 27%;
+    --chart-4: 220 14% 96%;
+    --chart-5: 0 0% 99%;
+    --radius: 0.75rem;
+    --sidebar: 0 0% 99%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 0 74% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 92% 50%;
+    --sidebar-accent-foreground: 215 25% 27%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 0 74% 42%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 142 76% 36%;
+    --background: 215 28% 17%;
+    --foreground: 210 20% 98%;
+    --card: 215 28% 17%;
+    --card-foreground: 210 20% 98%;
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 0 74% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 215 32% 27%;
+    --muted-foreground: 217 10% 65%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 32% 27%;
+    --input: 215 32% 27%;
+    --ring: 0 74% 42%;
+    --chart-1: 0 74% 42%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 210 20% 98%;
+    --chart-4: 215 32% 27%;
+    --chart-5: 215 28% 17%;
+    --sidebar: 215 28% 17%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 0 74% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 92% 50%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 32% 27%;
+    --sidebar-ring: 0 74% 42%;
   }
 }
 
@@ -55,5 +82,118 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Enhanced mobile-specific optimizations for better touch interaction and readability */
+  @media (max-width: 767px) {
+    /* Improve touch targets on mobile */
+    button,
+    [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Better text sizing for mobile readability */
+    .text-xs {
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .text-sm {
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .text-base {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Optimize spacing for mobile */
+    .space-y-1 > * + * {
+      margin-top: 0.25rem;
+    }
+
+    .space-y-2 > * + * {
+      margin-top: 0.5rem;
+    }
+
+    .space-y-3 > * + * {
+      margin-top: 0.75rem;
+    }
+
+    .space-y-4 > * + * {
+      margin-top: 1rem;
+    }
+
+    /* Ensure proper safe area handling */
+    .pt-safe-top {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+
+    .pb-safe-bottom {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    /* Optimize card padding for mobile */
+    .card {
+      padding: 1rem;
+    }
+
+    /* Better input field sizing for mobile */
+    input,
+    select,
+    textarea {
+      min-height: 44px;
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+  }
+
+  /* Added support for different mobile aspect ratios */
+  @media (max-width: 767px) and (min-aspect-ratio: 9 / 16) {
+    /* Tall screens (18:9, 19.5:9, etc.) */
+    .min-h-screen-safe {
+      min-height: 100dvh;
+    }
+
+    /* Adjust spacing for tall screens */
+    .space-y-6 > * + * {
+      margin-top: 2rem;
+    }
+  }
+
+  @media (max-width: 767px) and (max-aspect-ratio: 9 / 16) {
+    /* Wide screens or landscape */
+    .min-h-screen-safe {
+      min-height: 100svh;
+    }
+
+    /* Compact spacing for landscape */
+    .space-y-6 > * + * {
+      margin-top: 1rem;
+    }
+  }
+}
+
+/* Added custom auth page styling for better visual hierarchy */
+@layer components {
+  .auth-container {
+    @apply min-h-screen bg-gradient-to-br from-background via-card to-muted;
+  }
+
+  .auth-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-xl;
+  }
+
+  .auth-input {
+    @apply bg-input border-border/60 focus:border-primary/50 focus:ring-primary/20;
+  }
+
+  .auth-button-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200;
+  }
+
+  .auth-button-secondary {
+    @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-md hover:shadow-lg transition-all duration-200;
   }
 }
