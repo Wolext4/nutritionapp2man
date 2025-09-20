@@ -72,9 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         LocalDatabase.initialize()
       }
 
+      console.log("[v0] Starting login process for:", email)
       const result = await LocalDatabase.loginUser(email, password)
+      console.log("[v0] Login result:", result)
 
       if (result.success && result.user) {
+        console.log("[v0] Setting user in auth context:", result.user.email)
         setUser(result.user)
         if (typeof window !== "undefined") {
           const tutorialCompleted = localStorage.getItem(`tutorial_completed_${result.user.id}`) === "true"
@@ -82,12 +85,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setShowTutorial(true)
           }
         }
+        console.log("[v0] Login process completed successfully")
         return { success: true }
       } else {
+        console.log("[v0] Login failed with error:", result.error)
         return { success: false, error: result.error || "Login failed" }
       }
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("[v0] Login error:", error)
       return { success: false, error: "An unexpected error occurred" }
     }
   }
