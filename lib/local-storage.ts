@@ -431,6 +431,8 @@ export class LocalDatabase {
     // Check password
     const passwords = getFromStorage<Record<string, string>>(STORAGE_KEYS.PASSWORDS, {})
     console.log("[v0] Checking password for user:", user.id)
+    console.log("[v0] Stored password:", passwords[user.id])
+    console.log("[v0] Provided password:", password)
 
     if (passwords[user.id] !== password) {
       console.log("[v0] Password mismatch for user:", user.id)
