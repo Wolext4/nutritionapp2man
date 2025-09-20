@@ -25,6 +25,7 @@ import {
   User,
   Utensils,
   Shield,
+  SheetIcon as SleepIcon,
 } from "lucide-react"
 import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
 import MealLogger from "./meal-logger"
@@ -34,6 +35,7 @@ import Recommendations from "./recommendations"
 import PersonalizedWelcome from "./personalized-welcome"
 import ProfileSettings from "./profile-settings"
 import AdminDashboard from "./admin-dashboard"
+import SleepTracker from "./sleep-tracker"
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -144,7 +146,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6 py-3 xs:py-4 sm:py-6 pb-safe-bottom">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 xs:space-y-4">
           <TabsList
-            className={`grid w-full ${isAdmin ? "grid-cols-3 xs:grid-cols-7 lg:w-fit lg:grid-cols-7" : "grid-cols-3 xs:grid-cols-6 lg:w-fit lg:grid-cols-6"} h-auto p-0.5`}
+            className={`grid w-full ${isAdmin ? "grid-cols-3 xs:grid-cols-8 lg:w-fit lg:grid-cols-8" : "grid-cols-3 xs:grid-cols-7 lg:w-fit lg:grid-cols-7"} h-auto p-0.5`}
           >
             <TabsTrigger
               value="overview"
@@ -191,6 +193,14 @@ export default function Dashboard() {
               <User className="h-3 w-3" />
               <span className="xs:hidden">Prof</span>
               <span className="hidden xs:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="sleep"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <SleepIcon className="h-3 w-3" />
+              <span className="xs:hidden">Sleep</span>
+              <span className="hidden xs:inline">Sleep</span>
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger
@@ -286,11 +296,8 @@ export default function Dashboard() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm xs:text-base flex items-center gap-1 xs:gap-2">
-                    <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4 text-purple-600" />
-                    Weight Goal
-                  </CardTitle>
+                <CardHeader>
+                  <CardTitle className="text-sm xs:text-base">Weight Goal</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1 xs:space-y-2">
@@ -423,6 +430,10 @@ export default function Dashboard() {
 
           <TabsContent value="profile">
             <ProfileSettings />
+          </TabsContent>
+
+          <TabsContent value="sleep">
+            <SleepTracker />
           </TabsContent>
 
           {isAdmin && (

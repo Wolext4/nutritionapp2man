@@ -9,6 +9,7 @@ export interface User {
   gender: "male" | "female" | "other"
   height: number
   weight: number
+  waistCircumference?: number // Added optional waist circumference field
   location?: string
   occupation?: string
   healthConditions?: string[]
@@ -107,6 +108,18 @@ export interface UserStats {
   lastUpdated: string
 }
 
+export interface SleepEntry {
+  id: string
+  userId: string
+  date: string
+  hoursSlept: number
+  sleepQuality: "poor" | "fair" | "good" | "excellent"
+  bedTime?: string
+  wakeTime?: string
+  notes?: string
+  createdAt: string
+}
+
 // Storage keys
 const STORAGE_KEYS = {
   USERS: "naijafit_users",
@@ -117,6 +130,7 @@ const STORAGE_KEYS = {
   PASSWORDS: "naijafit_passwords",
   INITIALIZED: "naijafit_initialized",
   APP_SETTINGS: "naijafit_app_settings",
+  SLEEP_ENTRIES: "naijafit_sleep_entries",
 } as const
 
 // Utility functions
@@ -160,6 +174,7 @@ export class LocalDatabase {
         gender: "female",
         height: 165,
         weight: 68,
+        waistCircumference: 75, // Added waist circumference to demo user
         location: "Lagos, Nigeria",
         occupation: "Software Developer",
         healthConditions: [],
@@ -177,6 +192,7 @@ export class LocalDatabase {
         gender: "other",
         height: 170,
         weight: 70,
+        waistCircumference: 80, // Added waist circumference to admin user
         location: "Nigeria",
         occupation: "System Administrator",
         healthConditions: [],
@@ -313,6 +329,7 @@ export class LocalDatabase {
       gender: userData.gender,
       height: userData.height,
       weight: userData.weight,
+      waistCircumference: userData.waistCircumference, // Include waist circumference in new user creation
       location: userData.location,
       occupation: userData.occupation,
       healthConditions: userData.healthConditions || [],
@@ -804,5 +821,53 @@ export class LocalDatabase {
     Object.values(STORAGE_KEYS).forEach((key) => {
       localStorage.removeItem(key)
     })
+  }
+
+  // Sleep operations
+  static getSleepEntries(): SleepEntry[] {
+    return getFromStorage<SleepEntry[]>(STORAGE_KEYS.SLEEP_ENTRIES, [])
+  }
+
+  static saveSleepEntries(entries: SleepEntry[]): void {
+    setToStorage(STORAGE_KEYS.SLEEP_ENTRIES, entries)
+  }
+
+  static getUserSleepEntries(userId: string, startDate?: string, endDate?: string): SleepEntry[] {
+    const entries = this.getSleepEntries()
+    let userEntries = entries.filter((e) => e.userId === userId)
+
+    if (startDate) {
+      userEntries = userEntries.filter((e) => e.date >= startDate)
+    }
+
+    if (endDate) {
+      userEntries = userEntries.filter((e) => e.date <= endDate)
+    }
+
+    return userEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }
+
+  static async createSleepEntry(
+    entryData: Omit<SleepEntry, "id" | "createdAt">,
+  ): Promise<{ success: boolean; entry?: SleepEntry; error?: string }> {
+    const entries = this.getSleepEntries()
+
+    // Check if entry already exists for this date
+    const existingIndex = entries.findIndex((e) => e.userId === entryData.userId && e.date === entryData.date)
+
+    const newEntry: SleepEntry = {
+      id: existingIndex >= 0 ? entries[existingIndex].id : `sleep_${Date.now()}`,
+      ...entryData,
+      createdAt: existingIndex >= 0 ? entries[existingIndex].createdAt : new Date().toISOString(),
+    }
+
+    if (existingIndex >= 0) {
+      entries[existingIndex] = newEntry
+    } else {
+      entries.push(newEntry)
+    }
+
+    this.saveSleepEntries(entries)
+    return { success: true, entry: newEntry }
   }
 }

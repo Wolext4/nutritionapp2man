@@ -7,19 +7,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
-import { Calculator, TrendingUp, Target, AlertCircle } from "lucide-react"
+import { calculateBMI, calculateEnhancedHealthMetrics, getDailyCalorieRecommendation } from "../utils/calculations"
+import { Calculator, TrendingUp, Target, AlertCircle, Activity } from "lucide-react"
 
 export default function BMICalculator() {
   const { user, updateProfile } = useAuth()
   const [height, setHeight] = useState(user?.height.toString() || "")
   const [weight, setWeight] = useState(user?.weight.toString() || "")
+  const [waistCircumference, setWaistCircumference] = useState(user?.waistCircumference?.toString() || "")
   const [isUpdating, setIsUpdating] = useState(false)
 
   if (!user) return null
 
   const currentBMI = calculateBMI(user.weight, user.height)
-  const newBMI = height && weight ? calculateBMI(Number.parseFloat(weight), Number.parseFloat(height)) : null
+  const currentEnhanced = calculateEnhancedHealthMetrics(user.weight, user.height, user.waistCircumference)
+  const newMetrics =
+    height && weight
+      ? calculateEnhancedHealthMetrics(
+          Number.parseFloat(weight),
+          Number.parseFloat(height),
+          waistCircumference ? Number.parseFloat(waistCircumference) : undefined,
+        )
+      : null
   const dailyCalories = getDailyCalorieRecommendation(user.age, user.gender, user.weight, user.height)
 
   const updateUserProfile = async () => {
@@ -30,6 +39,7 @@ export default function BMICalculator() {
       updateProfile({
         height: Number.parseFloat(height),
         weight: Number.parseFloat(weight),
+        waistCircumference: waistCircumference ? Number.parseFloat(waistCircumference) : undefined,
       })
       alert("Profile updated successfully!")
     } catch (error) {
@@ -65,19 +75,34 @@ export default function BMICalculator() {
     }
   }
 
+  const getRiskColor = (risk: string) => {
+    switch (risk) {
+      case "Low":
+        return "text-green-600"
+      case "Moderate":
+        return "text-yellow-600"
+      case "High":
+        return "text-orange-600"
+      case "Very High":
+        return "text-red-600"
+      default:
+        return "text-gray-600"
+    }
+  }
+
   return (
     <div className="space-y-6">
-      {/* Current BMI Status */}
+      {/* Current Health Status */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-green-600" />
-            Your Current BMI
+            Your Current Health Metrics
           </CardTitle>
           <CardDescription>Based on your profile information</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold mb-2">{currentBMI.bmi}</div>
               <Badge variant={getBMIBadgeVariant(currentBMI.category)} className="mb-2">
@@ -86,16 +111,36 @@ export default function BMICalculator() {
               <p className="text-sm text-muted-foreground">
                 Height: {user.height}cm, Weight: {user.weight}kg
               </p>
+              {user.waistCircumference && currentEnhanced.waistToHeight && (
+                <div className="mt-4">
+                  <div className="text-2xl font-bold mb-1">{currentEnhanced.waistToHeight.ratio}</div>
+                  <Badge
+                    variant={currentEnhanced.waistToHeight.category === "Healthy" ? "default" : "destructive"}
+                    className="mb-2"
+                  >
+                    {currentEnhanced.waistToHeight.category}
+                  </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Waist-to-Height Ratio: {user.waistCircumference}cm waist
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div className="md:col-span-2">
-              <h4 className="font-medium mb-2">What this means:</h4>
-              <p className="text-sm text-muted-foreground mb-3">{currentBMI.description}</p>
+            <div>
+              <div className="mb-4">
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Overall Health Risk:
+                  <Badge className={getRiskColor(currentEnhanced.overallRisk)}>{currentEnhanced.overallRisk}</Badge>
+                </h4>
+                <p className="text-sm text-muted-foreground mb-3">{currentBMI.description}</p>
+              </div>
 
               <div className="space-y-2">
-                <h5 className="font-medium text-sm">Recommendations:</h5>
+                <h5 className="font-medium text-sm">Key Recommendations:</h5>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  {currentBMI.recommendations.slice(0, 3).map((rec, index) => (
+                  {currentEnhanced.combinedRecommendations.slice(0, 4).map((rec, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2 flex-shrink-0" />
                       {rec}
@@ -108,14 +153,14 @@ export default function BMICalculator() {
         </CardContent>
       </Card>
 
-      {/* BMI Calculator */}
+      {/* Health Metrics Calculator */}
       <Card>
         <CardHeader>
           <CardTitle>Update Your Measurements</CardTitle>
-          <CardDescription>Recalculate your BMI with new measurements</CardDescription>
+          <CardDescription>Recalculate your health metrics with new measurements</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
               <Input
@@ -141,18 +186,53 @@ export default function BMICalculator() {
                 step="0.1"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="waist">Waist Circumference (cm)</Label>
+              <Input
+                id="waist"
+                type="number"
+                placeholder="80"
+                value={waistCircumference}
+                onChange={(e) => setWaistCircumference(e.target.value)}
+                min="50"
+                max="200"
+                step="0.1"
+              />
+              <p className="text-xs text-muted-foreground">Optional: Measure at narrowest point</p>
+            </div>
           </div>
 
-          {newBMI && (height !== user.height.toString() || weight !== user.weight.toString()) && (
-            <div className="border rounded-lg p-4 bg-muted/50">
-              <h4 className="font-medium mb-2">New BMI Calculation:</h4>
-              <div className="flex items-center gap-4 mb-3">
-                <div className="text-2xl font-bold">{newBMI.bmi}</div>
-                <Badge variant={getBMIBadgeVariant(newBMI.category)}>{newBMI.category}</Badge>
+          {newMetrics &&
+            (height !== user.height.toString() ||
+              weight !== user.weight.toString() ||
+              waistCircumference !== (user.waistCircumference?.toString() || "")) && (
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <h4 className="font-medium mb-2">New Health Calculation:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="text-2xl font-bold">{newMetrics.bmi.bmi}</div>
+                      <Badge variant={getBMIBadgeVariant(newMetrics.bmi.category)}>{newMetrics.bmi.category}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">BMI Category</p>
+                  </div>
+                  {newMetrics.waistToHeight && (
+                    <div>
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="text-2xl font-bold">{newMetrics.waistToHeight.ratio}</div>
+                        <Badge variant={newMetrics.waistToHeight.category === "Healthy" ? "default" : "destructive"}>
+                          {newMetrics.waistToHeight.category}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Waist-to-Height Ratio</p>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <Badge className={getRiskColor(newMetrics.overallRisk)}>Overall Risk: {newMetrics.overallRisk}</Badge>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">{newBMI.description}</p>
-            </div>
-          )}
+            )}
 
           <Button
             onClick={updateUserProfile}
@@ -160,7 +240,9 @@ export default function BMICalculator() {
               !height ||
               !weight ||
               isUpdating ||
-              (height === user.height.toString() && weight === user.weight.toString())
+              (height === user.height.toString() &&
+                weight === user.weight.toString() &&
+                waistCircumference === (user.waistCircumference?.toString() || ""))
             }
             className="w-full bg-green-600 hover:bg-green-700"
           >

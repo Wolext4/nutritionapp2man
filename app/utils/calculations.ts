@@ -5,6 +5,13 @@ export interface BMIResult {
   recommendations: string[]
 }
 
+export interface WaistToHeightResult {
+  ratio: number
+  category: "Healthy" | "Increased Risk" | "High Risk"
+  description: string
+  recommendations: string[]
+}
+
 export function calculateBMI(weight: number, height: number): BMIResult {
   const heightInMeters = height / 100
   const bmi = weight / (heightInMeters * heightInMeters)
@@ -60,6 +67,99 @@ export function calculateBMI(weight: number, height: number): BMIResult {
     category,
     description,
     recommendations,
+  }
+}
+
+export function calculateWaistToHeightRatio(waistCircumference: number, height: number): WaistToHeightResult {
+  const ratio = waistCircumference / height
+
+  let category: WaistToHeightResult["category"]
+  let description: string
+  let recommendations: string[]
+
+  if (ratio < 0.5) {
+    category = "Healthy"
+    description = "Your waist-to-height ratio indicates a healthy distribution of body fat."
+    recommendations = [
+      "Maintain your current healthy lifestyle",
+      "Continue regular physical activity",
+      "Keep eating a balanced Nigerian diet",
+      "Monitor your measurements regularly",
+    ]
+  } else if (ratio >= 0.5 && ratio < 0.6) {
+    category = "Increased Risk"
+    description = "Your waist-to-height ratio suggests increased health risks. Consider lifestyle changes."
+    recommendations = [
+      "Focus on reducing abdominal fat through exercise",
+      "Increase fiber intake with vegetables and beans",
+      "Reduce refined carbohydrates and sugary foods",
+      "Include more physical activity in your daily routine",
+      "Consider strength training exercises",
+    ]
+  } else {
+    category = "High Risk"
+    description = "Your waist-to-height ratio indicates high health risks. Consult a healthcare provider."
+    recommendations = [
+      "Seek professional medical advice immediately",
+      "Focus on significant lifestyle changes",
+      "Prioritize cardiovascular exercise",
+      "Drastically reduce processed foods and sugar",
+      "Consider working with a nutritionist",
+    ]
+  }
+
+  return {
+    ratio: Number(ratio.toFixed(2)),
+    category,
+    description,
+    recommendations,
+  }
+}
+
+export function calculateEnhancedHealthMetrics(
+  weight: number,
+  height: number,
+  waistCircumference?: number,
+): {
+  bmi: BMIResult
+  waistToHeight?: WaistToHeightResult
+  overallRisk: "Low" | "Moderate" | "High" | "Very High"
+  combinedRecommendations: string[]
+} {
+  const bmi = calculateBMI(weight, height)
+  const waistToHeight = waistCircumference ? calculateWaistToHeightRatio(waistCircumference, height) : undefined
+
+  // Determine overall risk based on both BMI and waist-to-height ratio
+  let overallRisk: "Low" | "Moderate" | "High" | "Very High" = "Low"
+
+  if (bmi.category === "Normal" && (!waistToHeight || waistToHeight.category === "Healthy")) {
+    overallRisk = "Low"
+  } else if (
+    (bmi.category === "Normal" && waistToHeight?.category === "Increased Risk") ||
+    (bmi.category === "Overweight" && (!waistToHeight || waistToHeight.category === "Healthy"))
+  ) {
+    overallRisk = "Moderate"
+  } else if (
+    (bmi.category === "Overweight" && waistToHeight?.category === "Increased Risk") ||
+    (bmi.category === "Obese" && (!waistToHeight || waistToHeight.category === "Healthy")) ||
+    (bmi.category === "Normal" && waistToHeight?.category === "High Risk")
+  ) {
+    overallRisk = "High"
+  } else {
+    overallRisk = "Very High"
+  }
+
+  // Combine recommendations from both metrics
+  const combinedRecommendations = [
+    ...bmi.recommendations.slice(0, 3),
+    ...(waistToHeight?.recommendations.slice(0, 2) || []),
+  ]
+
+  return {
+    bmi,
+    waistToHeight,
+    overallRisk,
+    combinedRecommendations,
   }
 }
 

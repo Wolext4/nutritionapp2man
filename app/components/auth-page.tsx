@@ -33,6 +33,7 @@ export default function AuthPage() {
     gender: "",
     height: "",
     weight: "",
+    waistCircumference: "",
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -91,6 +92,7 @@ export default function AuthPage() {
       gender: signupData.gender as "male" | "female" | "other",
       height: Number.parseFloat(signupData.height),
       weight: Number.parseFloat(signupData.weight),
+      waistCircumference: signupData.waistCircumference ? Number.parseFloat(signupData.waistCircumference) : undefined,
     }
 
     const result = await signup(userData)
@@ -321,6 +323,25 @@ export default function AuthPage() {
                         className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-waist" className="text-sm font-medium text-gray-700">
+                      Waist Circumference (cm)
+                    </Label>
+                    <Input
+                      id="signup-waist"
+                      type="number"
+                      placeholder="80"
+                      min="50"
+                      max="200"
+                      value={signupData.waistCircumference}
+                      onChange={(e) => setSignupData({ ...signupData, waistCircumference: e.target.value })}
+                      className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Optional: Measure around your waist at the narrowest point for better health insights
+                    </p>
                   </div>
 
                   <div className="space-y-2">

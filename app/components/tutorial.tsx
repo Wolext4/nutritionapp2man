@@ -196,7 +196,7 @@ const tutorialSteps = [
     content: (
       <div className="space-y-8">
         <div className="text-center">
-          <div className="text-6xl mb-4">🎉</div>
+          <div className="text-6xl mb-4">🏆</div>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Congratulations! You're ready to start your personalized nutrition journey with GluGuide. Here's your
             roadmap to success:
