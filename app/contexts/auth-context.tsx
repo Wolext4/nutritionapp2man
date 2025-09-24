@@ -24,6 +24,8 @@ interface AuthContextType {
   showTutorial: boolean
   completeTutorial: () => void
   skipTutorial: () => void
+  showRatingDialog: boolean
+  closeRatingDialog: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [showRatingDialog, setShowRatingDialog] = useState(false)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -84,6 +87,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!tutorialCompleted) {
             setShowTutorial(true)
           }
+
+          const hasRated = localStorage.getItem(`app_rated_${result.user.id}`) === "true"
+          if (!hasRated) {
+            setTimeout(() => {
+              setShowRatingDialog(true)
+            }, 1500)
+          }
         }
         console.log("[v0] Login process completed successfully")
         return { success: true }
@@ -127,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       LocalDatabase.logoutUser()
       setUser(null)
       setShowTutorial(false)
+      setShowRatingDialog(false)
     } catch (error) {
       console.error("Logout error:", error)
     }
@@ -169,6 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const closeRatingDialog = () => {
+    setShowRatingDialog(false)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -182,6 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         showTutorial,
         completeTutorial,
         skipTutorial,
+        showRatingDialog,
+        closeRatingDialog,
       }}
     >
       {children}
