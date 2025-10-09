@@ -59,7 +59,7 @@ export default function PersonalizedWelcome() {
   return (
     <div className="space-y-6">
       {/* Personalized Welcome Header */}
-      <Card className="bg-gradient-to-r from-green-50 to-orange-50 dark:from-green-950 dark:to-orange-950 border-green-200">
+      <Card className="bg-secondary border-green-200">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-2">

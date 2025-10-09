@@ -1,627 +1,532 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "../contexts/auth-context"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LocalDatabase } from "@/lib/local-storage"
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Clock, CheckCircle, AlertCircle, Hand, Search, Minus, ShoppingCart } from "lucide-react"
-import PortionSizingGuide from "./portion-sizing-guide"
-import { nigerianFoods, calculatePortionNutrition, getAllCategories, type NigerianFood } from "../data/nigerian-foods"
-import { LocalDatabase } from "@/lib/local-storage"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Plus, Minus, X, Hand } from "lucide-react"
 
-interface MealLoggerProps {
-  onMealLogged?: () => void
-}
-
-interface FoodItem {
+type FoodDbItem = {
   id: string
   name: string
-  calories: number
-  protein: number
-  carbs: number
-  fats: number
-  serving: string
-  isNigerianFood: boolean
-  quantity: number
-  caloriesPerServing: number
-  proteinPerServing: number
-  carbsPerServing: number
-  fatsPerServing: number
+  category: string
+  portion: string
+  grams: number
+  nutrition: {
+    calories: number
+    protein: number
+    carbs: number
+    fats: number
+    fiber: number
+    iron: number
+    vitaminA: number
+  }
 }
 
-interface CartItem {
-  food: NigerianFood
-  servings: number
-  quantity: number
+type SelectedEntry = {
+  food: FoodDbItem
+  servings: number // multiplier of the base portion
+  quantity: number // the counter (how many times this item is included)
 }
 
-export default function MealLogger({ onMealLogged }: MealLoggerProps = {}) {
+export default function MealLogger() {
   const { user } = useAuth()
-  const [showPortionGuide, setShowPortionGuide] = useState(false)
   const [mealType, setMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("breakfast")
+  const [showPortionGuide, setShowPortionGuide] = useState(false)
 
+  const [foods, setFoods] = useState<FoodDbItem[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [category, setCategory] = useState<string>("All Categories")
 
-  const [foodCart, setFoodCart] = useState<CartItem[]>([])
-  const [selectedFoods, setSelectedFoods] = useState<FoodItem[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [selectedMap, setSelectedMap] = useState<Record<string, SelectedEntry>>({})
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
-  if (!user) return null
+  // Logged meals (for current user & selected date)
+  const [todayMeals, setTodayMeals] = useState<any[]>([]) // meals as stored by LocalDatabase
 
-  const filteredFoods = nigerianFoods.filter((food) => {
-    const matchesSearch =
-      food.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      food.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || food.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  // Today's date string YYYY-MM-DD
+  const todayDate = useMemo(() => new Date().toISOString().split("T")[0], [])
 
-  const categories = getAllCategories()
+  useEffect(() => {
+    // load food database from LocalDatabase
+    const dbFoods = LocalDatabase.getFoodDatabase() || []
+    setFoods(dbFoods)
+  }, [])
 
-  const addToCart = (food: NigerianFood) => {
-    const existingCartItem = foodCart.find((item) => item.food.id === food.id)
+  useEffect(() => {
+    // refresh today's meals for the user whenever user or mealType changes
+    if (!user) return
+    const meals = LocalDatabase.getUserMeals ? LocalDatabase.getUserMeals(user.id) : []
+    // filter to today's meals and by mealType
+    const todays = meals.filter((m) => m.date === todayDate && m.type === mealType)
+    setTodayMeals(todays)
+  }, [user, mealType])
 
-    if (existingCartItem) {
-      setFoodCart(foodCart.map((item) => (item.food.id === food.id ? { ...item, quantity: item.quantity + 1 } : item)))
-    } else {
-      setFoodCart([...foodCart, { food, servings: 1, quantity: 1 }])
+  // Derived lists
+  const categories = useMemo(() => {
+    return ["All Categories", ...Array.from(new Set(foods.map((f) => f.category)))]
+  }, [foods])
+
+  const filteredFoods = useMemo(() => {
+    let out = foods
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      out = out.filter((f) => f.name.toLowerCase().includes(q) || f.category.toLowerCase().includes(q))
     }
-    setMessage({ type: "success", text: `${food.name} added to selection` })
-    setTimeout(() => setMessage(null), 2000)
+    if (category !== "All Categories") {
+      out = out.filter((f) => f.category === category)
+    }
+    return out
+  }, [foods, searchQuery, category])
+
+  // Selection utilities
+  const addOrIncrement = (food: FoodDbItem) => {
+    setSelectedMap((prev) => {
+      const prevEntry = prev[food.id]
+      const newEntry: SelectedEntry = prevEntry
+        ? { ...prevEntry, quantity: prevEntry.quantity + 1 }
+        : { food, servings: 1, quantity: 1 }
+      return { ...prev, [food.id]: newEntry }
+    })
   }
 
-  const updateCartServings = (foodId: string, servings: number) => {
-    setFoodCart(
-      foodCart.map((item) => (item.food.id === foodId ? { ...item, servings: Math.max(0.5, servings) } : item)),
-    )
+  const decrement = (foodId: string) => {
+    setSelectedMap((prev) => {
+      const entry = prev[foodId]
+      if (!entry) return prev
+      const newQty = entry.quantity - 1
+      if (newQty <= 0) {
+        const copy = { ...prev }
+        delete copy[foodId]
+        return copy
+      }
+      return { ...prev, [foodId]: { ...entry, quantity: newQty } }
+    })
   }
 
-  const updateCartQuantity = (foodId: string, change: number) => {
-    setFoodCart(
-      foodCart.map((item) => {
-        if (item.food.id === foodId) {
-          const newQuantity = Math.max(1, item.quantity + change)
-          return { ...item, quantity: newQuantity }
-        }
-        return item
-      }),
-    )
+  const removeSelection = (foodId: string) => {
+    setSelectedMap((prev) => {
+      const copy = { ...prev }
+      delete copy[foodId]
+      return copy
+    })
   }
 
-  const removeFromCart = (foodId: string) => {
-    setFoodCart(foodCart.filter((item) => item.food.id !== foodId))
+  const updateServings = (foodId: string, servings: number) => {
+    setSelectedMap((prev) => {
+      const entry = prev[foodId]
+      if (!entry) return prev
+      return { ...prev, [foodId]: { ...entry, servings: Math.max(0.1, servings) } }
+    })
   }
 
-  const addAllToMeal = () => {
-    if (foodCart.length === 0) {
-      setMessage({ type: "error", text: "No foods selected" })
+  const selectionArray = useMemo(() => Object.values(selectedMap), [selectedMap])
+
+  const selectionTotalCalories = useMemo(() => {
+    return selectionArray.reduce((sum, e) => {
+      const perUnit = (e.food.nutrition?.calories || 0) * e.servings
+      return sum + perUnit * e.quantity
+    }, 0)
+  }, [selectionArray])
+
+  // Build expanded foods (repeats per quantity) and call LocalDatabase.createMeal
+  const handleAddAllToMeal = async () => {
+    if (!user) {
+      setMessage({ type: "error", text: "You must be logged in to save a meal." })
+      setTimeout(() => setMessage(null), 3000)
       return
     }
 
-    const newFoodItems: FoodItem[] = []
-
-    foodCart.forEach((cartItem) => {
-      const nutrition = calculatePortionNutrition(cartItem.food, cartItem.servings)
-      const foodId = `${cartItem.food.name}-${cartItem.servings}`
-
-      // Check if this exact food and serving size already exists in meal
-      const existingFoodIndex = selectedFoods.findIndex((f) => f.id === foodId)
-
-      if (existingFoodIndex >= 0) {
-        // Update existing food quantity
-        const updatedFoods = [...selectedFoods]
-        updatedFoods[existingFoodIndex].quantity += cartItem.quantity
-        updatedFoods[existingFoodIndex].calories =
-          updatedFoods[existingFoodIndex].caloriesPerServing * updatedFoods[existingFoodIndex].quantity
-        updatedFoods[existingFoodIndex].protein =
-          updatedFoods[existingFoodIndex].proteinPerServing * updatedFoods[existingFoodIndex].quantity
-        updatedFoods[existingFoodIndex].carbs =
-          updatedFoods[existingFoodIndex].carbsPerServing * updatedFoods[existingFoodIndex].quantity
-        updatedFoods[existingFoodIndex].fats =
-          updatedFoods[existingFoodIndex].fatsPerServing * updatedFoods[existingFoodIndex].quantity
-        setSelectedFoods(updatedFoods)
-      } else {
-        // Create new food item
-        const newFood: FoodItem = {
-          id: foodId,
-          name: cartItem.food.name,
-          calories: nutrition.calories * cartItem.quantity,
-          protein: nutrition.protein * cartItem.quantity,
-          carbs: nutrition.carbs * cartItem.quantity,
-          fats: nutrition.fats * cartItem.quantity,
-          serving: `${cartItem.servings} serving${cartItem.servings !== 1 ? "s" : ""} (${cartItem.food.servingSize})`,
-          isNigerianFood: true,
-          quantity: cartItem.quantity,
-          caloriesPerServing: nutrition.calories,
-          proteinPerServing: nutrition.protein,
-          carbsPerServing: nutrition.carbs,
-          fatsPerServing: nutrition.fats,
-        }
-        newFoodItems.push(newFood)
-      }
-    })
-
-    if (newFoodItems.length > 0) {
-      setSelectedFoods([...selectedFoods, ...newFoodItems])
-    }
-
-    // Clear cart after adding to meal
-    setFoodCart([])
-    setMessage({ type: "success", text: `Added ${foodCart.length} food${foodCart.length > 1 ? "s" : ""} to meal` })
-    setTimeout(() => setMessage(null), 3000)
-  }
-
-  const increaseQuantity = (foodId: string) => {
-    const updatedFoods = selectedFoods.map((food) => {
-      if (food.id === foodId) {
-        const newQuantity = food.quantity + 1
-        return {
-          ...food,
-          quantity: newQuantity,
-          calories: food.caloriesPerServing * newQuantity,
-          protein: food.proteinPerServing * newQuantity,
-          carbs: food.carbsPerServing * newQuantity,
-          fats: food.fatsPerServing * newQuantity,
-        }
-      }
-      return food
-    })
-    setSelectedFoods(updatedFoods)
-  }
-
-  const decreaseQuantity = (foodId: string) => {
-    const updatedFoods = selectedFoods
-      .map((food) => {
-        if (food.id === foodId && food.quantity > 1) {
-          const newQuantity = food.quantity - 1
-          return {
-            ...food,
-            quantity: newQuantity,
-            calories: food.caloriesPerServing * newQuantity,
-            protein: food.proteinPerServing * newQuantity,
-            carbs: food.carbsPerServing * newQuantity,
-            fats: food.fatsPerServing * newQuantity,
-          }
-        }
-        return food
-      })
-      .filter((food) => food.quantity > 0)
-    setSelectedFoods(updatedFoods)
-  }
-
-  const removeFood = (foodId: string) => {
-    setSelectedFoods(selectedFoods.filter((f) => f.id !== foodId))
-  }
-
-  const saveMeal = async () => {
-    if (selectedFoods.length === 0) {
-      setMessage({ type: "error", text: "Please add at least one food item" })
+    if (selectionArray.length === 0) {
+      setMessage({ type: "error", text: "No foods selected." })
+      setTimeout(() => setMessage(null), 2000)
       return
     }
 
-    setIsLoading(true)
-    setMessage(null)
-
+    setIsSaving(true)
     try {
       const now = new Date()
-      const currentDate = now.toISOString().split("T")[0]
       const currentTime = now.toTimeString().split(" ")[0].substring(0, 5)
-
-      // Convert selected foods to the format expected by LocalDatabase
-      const mealFoods = selectedFoods.map((food) => ({
-        id: food.id,
-        name: food.name,
-        grams: 100, // Default serving size
-        nutrition: {
-          calories: food.caloriesPerServing,
-          protein: food.proteinPerServing,
-          carbs: food.carbsPerServing,
-          fats: food.fatsPerServing,
-          fiber: 2, // Default values for missing nutrients
-          iron: 1,
-          vitaminA: 50,
-        },
-      }))
-
-      // Repeat foods based on quantity
-      const expandedFoods = selectedFoods.flatMap((food) =>
-        Array(food.quantity)
-          .fill(null)
-          .map(() => ({
-            id: `${food.id}-${Math.random()}`,
-            name: food.name,
-            grams: 100,
-            nutrition: {
-              calories: food.caloriesPerServing,
-              protein: food.proteinPerServing,
-              carbs: food.carbsPerServing,
-              fats: food.fatsPerServing,
-              fiber: 2,
-              iron: 1,
-              vitaminA: 50,
-            },
-          })),
-      )
-
-      const result = await LocalDatabase.createMeal({
-        userId: user.id,
-        type: mealType,
-        date: currentDate,
-        time: currentTime,
-        foods: expandedFoods,
-        totalNutrition: {
-          calories: selectedFoods.reduce((sum, food) => sum + food.calories * food.quantity, 0),
-          protein: selectedFoods.reduce((sum, food) => sum + food.protein * food.quantity, 0),
-          carbs: selectedFoods.reduce((sum, food) => sum + food.carbs * food.quantity, 0),
-          fats: selectedFoods.reduce((sum, food) => sum + food.fats * food.quantity, 0),
-          fiber: selectedFoods.length * 2, // Estimated
-          iron: selectedFoods.length * 1, // Estimated
-          vitaminA: selectedFoods.length * 50, // Estimated
-        },
+      const expandedFoods = selectionArray.flatMap((entry) => {
+        const perServCalories = Math.round((entry.food.nutrition?.calories || 0) * entry.servings)
+        // repeat per quantity so each logged food has its own id (keeps earlier logic consistent)
+        return Array.from({ length: entry.quantity }).map((_, idx) => ({
+          id: `${entry.food.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${idx}`,
+          name: entry.food.name,
+          grams: Math.round(entry.food.grams * entry.servings),
+          nutrition: {
+            calories: perServCalories,
+            protein: Math.round((entry.food.nutrition?.protein || 0) * entry.servings),
+            carbs: Math.round((entry.food.nutrition?.carbs || 0) * entry.servings),
+            fats: Math.round((entry.food.nutrition?.fats || 0) * entry.servings),
+            fiber: Math.round((entry.food.nutrition?.fiber || 0) * entry.servings),
+            iron: Math.round((entry.food.nutrition?.iron || 0) * entry.servings),
+            vitaminA: Math.round((entry.food.nutrition?.vitaminA || 0) * entry.servings),
+          },
+        }))
       })
 
-      if (result.success) {
-        setSelectedFoods([])
-        setMessage({ type: "success", text: "Meal logged successfully!" })
+      const totalNutrition = expandedFoods.reduce(
+        (acc, f) => {
+          acc.calories += f.nutrition.calories
+          acc.protein += f.nutrition.protein
+          acc.carbs += f.nutrition.carbs
+          acc.fats += f.nutrition.fats
+          acc.fiber += f.nutrition.fiber
+          acc.iron += f.nutrition.iron
+          acc.vitaminA += f.nutrition.vitaminA
+          return acc
+        },
+        { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
+      )
 
-        if (onMealLogged) {
-          onMealLogged()
-        }
-
-        setTimeout(() => setMessage(null), 3000)
-      } else {
-        setMessage({ type: "error", text: result.error || "Failed to log meal" })
+      const mealData = {
+        userId: user.id,
+        type: mealType,
+        date: todayDate,
+        time: currentTime,
+        foods: expandedFoods,
+        totalNutrition,
       }
-    } catch (error) {
-      console.error("Error saving meal:", error)
+
+      const result = await LocalDatabase.createMeal(mealData)
+      if (result.success) {
+        setMessage({ type: "success", text: "Meal logged successfully." })
+        // clear selection
+        setSelectedMap({})
+        // refresh today's meals
+        const meals = LocalDatabase.getUserMeals ? LocalDatabase.getUserMeals(user.id) : []
+        const todays = meals.filter((m) => m.date === todayDate && m.type === mealType)
+        setTodayMeals(todays)
+      } else {
+        setMessage({ type: "error", text: result.error || "Failed to save meal" })
+      }
+    } catch (err) {
+      console.error(err)
       setMessage({ type: "error", text: "An error occurred while saving the meal" })
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
+      setTimeout(() => setMessage(null), 3000)
     }
   }
 
-  const totalCalories = selectedFoods.reduce((sum, food) => sum + food.calories * food.quantity, 0)
-  const totalProtein = selectedFoods.reduce((sum, food) => sum + food.protein * food.quantity, 0)
-  const totalCarbs = selectedFoods.reduce((sum, food) => sum + food.carbs * food.quantity, 0)
-  const totalFats = selectedFoods.reduce((sum, food) => sum + food.fats * food.quantity, 0)
-
-  const cartTotalCalories = foodCart.reduce((sum, item) => {
-    const nutrition = calculatePortionNutrition(item.food, item.servings)
-    return sum + nutrition.calories * item.quantity
-  }, 0)
-
-  if (showPortionGuide) {
-    return (
-      <div className="space-y-4">
-        <Button variant="outline" onClick={() => setShowPortionGuide(false)} className="mb-4">
-          ← Back to Meal Logger
-        </Button>
-        <PortionSizingGuide />
-      </div>
-    )
+  // remove a single logged meal entry (optional helper)
+  const handleRemoveLoggedMeal = (mealId: string) => {
+    // LocalDatabase.deleteMeal exists (accepts id, userId)
+    if (!user) return
+    LocalDatabase.deleteMeal(mealId, user.id)
+    const meals = LocalDatabase.getUserMeals ? LocalDatabase.getUserMeals(user.id) : []
+    const todays = meals.filter((m) => m.date === todayDate && m.type === mealType)
+    setTodayMeals(todays)
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <Card>
+    <div className="p-6">
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
-            Log Your Meal
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">
-            Track your Nigerian meals using our food database and portion sizing guide
-          </CardDescription>
+          <CardTitle>+ Log Your Meal</CardTitle>
+          <CardDescription>Track your Nigerian meals using our food database and portion sizing guide</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div className="space-y-2 flex-1">
+        <CardContent>
+          <div className="flex justify-between items-center mb-4 gap-4">
+            <div className="w-full max-w-xs">
               <Label htmlFor="meal-type">Meal Type</Label>
-              <Select value={mealType} onValueChange={(value: any) => setMealType(value)}>
-                <SelectTrigger className="w-full sm:max-w-xs">
+              <Select value={mealType} onValueChange={(v: any) => setMealType(v)}>
+                <SelectTrigger id="meal-type" className="w-full bg-gray-900 border-gray-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="breakfast">🌅 Breakfast</SelectItem>
-                  <SelectItem value="lunch">☀️ Lunch</SelectItem>
-                  <SelectItem value="dinner">🌙 Dinner</SelectItem>
-                  <SelectItem value="snack">🍎 Snack</SelectItem>
+                  <SelectItem value="breakfast">Breakfast</SelectItem>
+                  <SelectItem value="lunch">Lunch</SelectItem>
+                  <SelectItem value="dinner">Dinner</SelectItem>
+                  <SelectItem value="snack">Snack</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowPortionGuide(true)}
-              className="flex items-center gap-2 w-full sm:w-auto"
-            >
-              <Hand className="h-4 w-4" />
-              Portion Guide
-            </Button>
+
+            <div>
+              <Button variant="outline" onClick={() => setShowPortionGuide((s) => !s)}>
+                <Hand className="mr-2 h-4 w-4" /> Portion Guide
+              </Button>
+            </div>
           </div>
 
-          <div className="border rounded-lg p-3 sm:p-4 space-y-4 bg-green-50 dark:bg-green-950/20">
-            <h3 className="font-medium flex items-center gap-2 text-sm sm:text-base">
-              <Search className="h-4 w-4" />
-              Nigerian Food Database
-            </h3>
+          {/* Food Database card */}
+          <Card className="bg-[#0f1720] border-gray-700 mb-6">
+            <CardContent>
+              <h3 className="font-semibold mb-3 text-white">🍽 Nigerian Food Database</h3>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="food-search" className="text-sm">
-                  Search Foods
-                </Label>
-                <Input
-                  id="food-search"
-                  placeholder="Search for Nigerian foods..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-sm">
-                  Category
-                </Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mb-3">
+                <div className="md:col-span-4">
+                  <Label>Search Foods</Label>
+                  <Input
+                    placeholder="Search for Nigerian foods..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-gray-900 border-gray-700 text-white"
+                  />
+                </div>
 
-            {filteredFoods.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm">Select Foods (Click to add to selection)</Label>
-                <div className="max-h-32 sm:max-h-40 overflow-y-auto border rounded-md">
-                  {filteredFoods.map((food) => (
-                    <div
-                      key={food.id}
-                      className="p-2 sm:p-3 cursor-pointer hover:bg-muted/50 border-b last:border-b-0 flex justify-between items-center"
-                      onClick={() => addToCart(food)}
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium text-xs sm:text-sm">{food.name}</div>
-                        <div className="text-xs text-muted-foreground">{food.description}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {food.calories} cal per {food.servingSize} • {food.category}
+                <div className="md:col-span-2">
+                  <Label>Category</Label>
+                  <Select value={category} onValueChange={(v: any) => setCategory(v)}>
+                    <SelectTrigger className="w-full bg-gray-900 border-gray-700 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-300 mb-2">
+                Select Foods (Click or use the + button to increase quantity)
+              </div>
+              <ScrollArea className="h-[260px] border rounded-md bg-[#0b1b20] p-1">
+                {filteredFoods.map((food) => {
+                  const inSelection = !!selectedMap[food.id]
+                  const qty = selectedMap[food.id]?.quantity ?? 0
+                  const perUnitCalories = Math.round(food.nutrition.calories)
+                  return (
+                    <div key={food.id} className="flex items-center justify-between p-3 border-b border-gray-800">
+                      <div>
+                        <div className="font-medium text-white">{food.name}</div>
+                        <div className="text-xs text-gray-400">
+                          {food.portion} • {food.category}
+                        </div>
+                        <div className="text-xs text-emerald-400 mt-1">
+                          {perUnitCalories} cal per {food.portion}
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700">
-                        <Plus className="h-4 w-4" />
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center rounded-md bg-gray-900 border border-gray-700">
+                          <button
+                            className="p-2"
+                            title="Decrease"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (inSelection) decrement(food.id)
+                            }}
+                          >
+                            <Minus className="w-4 h-4 text-gray-200" />
+                          </button>
+
+                          <div className="px-3 text-sm font-medium text-white min-w-[2rem] text-center">{qty}</div>
+
+                          <button
+                            className="p-2"
+                            title="Increase"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              addOrIncrement(food)
+                            }}
+                          >
+                            <Plus className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // also add one
+                            addOrIncrement(food)
+                          }}
+                        >
+                          + Add
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })}
+                {filteredFoods.length === 0 && <div className="p-3 text-sm text-gray-400">No foods found</div>}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          {/* Food Selection card (stacked below) */}
+          <Card className="bg-[#0f1720] border-gray-700 mb-6">
+            <CardHeader>
+              <CardTitle>🛒 Food Selection ({selectionArray.length} items)</CardTitle>
+              <CardDescription>Adjust servings and quantities, then add all to your meal</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {selectionArray.length === 0 ? (
+                <div className="text-sm text-gray-400 p-6">No foods selected yet.</div>
+              ) : (
+                <div className="space-y-3">
+                  <ScrollArea className="h-[260px] border rounded-md p-2 bg-[#08161a]">
+                    {selectionArray.map((entry) => (
+                      <div
+                        key={entry.food.id}
+                        className="p-3 mb-2 bg-gray-900 rounded-md flex flex-col md:flex-row md:items-center justify-between gap-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-white">{entry.food.name}</div>
+                          <div className="text-xs text-gray-400">
+                            {entry.food.portion} • {entry.food.category}
+                          </div>
+                          <div className="text-xs text-emerald-400 mt-1">
+                            {Math.round(entry.food.nutrition.calories * entry.servings)} cal total (
+                            {Math.round(entry.food.nutrition.calories)} cal per base)
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+                          <div className="min-w-[140px]">
+                            <Label className="text-xs">Servings</Label>
+                            <Input
+                              type="number"
+                              value={entry.servings}
+                              min={0.1}
+                              step={0.1}
+                              onChange={(e) =>
+                                updateServings(entry.food.id, Math.max(0.1, Number.parseFloat(e.target.value) || 0.1))
+                              }
+                              className="h-8 text-sm bg-gray-800 border-gray-700"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Quantity</Label>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => decrement(entry.food.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <div className="min-w-[2rem] text-center">{entry.quantity}</div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addOrIncrement(entry.food)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeSelection(entry.food.id)}
+                              className="text-red-500"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </ScrollArea>
+
+                  <div className="flex items-center justify-between mt-3">
+                    <div>
+                      <div className="text-sm text-gray-400">Selection Total:</div>
+                      <div className="text-emerald-400 font-semibold">
+                        {Math.round(selectionTotalCalories)} calories
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm text-gray-400 mr-2">
+                        Selected: {selectionArray.reduce((s, e) => s + e.quantity, 0)} items
+                      </div>
+                      <Button
+                        onClick={handleAddAllToMeal}
+                        disabled={isSaving}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add All to Meal ({selectionArray.length} items)
                       </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Meal Items card (saved meals for today & mealType) */}
+          <Card className="bg-[#0f1720] border-gray-700">
+            <CardHeader>
+              <CardTitle>⏰ {mealType.charAt(0).toUpperCase() + mealType.slice(1)} Items</CardTitle>
+              <CardDescription>
+                Total: {todayMeals.reduce((acc, m) => acc + (m.totalNutrition?.calories || 0), 0)} calories
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {todayMeals.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  No foods added yet. Use the Nigerian food database above to add foods.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {todayMeals.map((meal) => (
+                    <div key={meal.id} className="p-3 bg-gray-900 rounded-md border border-gray-800">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-semibold text-white">
+                            {meal.type.charAt(0).toUpperCase() + meal.type.slice(1)} • {meal.date} {meal.time}
+                          </div>
+                          <div className="text-sm text-gray-400">{meal.notes ?? ""}</div>
+                          <div className="text-emerald-400 mt-1">
+                            {Math.round(meal.totalNutrition?.calories || 0)} cal total
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveLoggedMeal(meal.id)}
+                            className="text-red-500"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+
+                      <Separator className="my-2" />
+                      <div className="grid gap-2">
+                        {meal.foods.map((f: any) => (
+                          <div key={f.id} className="flex justify-between text-sm text-gray-300">
+                            <span>{f.name}</span>
+                            <span>{Math.round(f.nutrition?.calories || 0)} cal</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </CardContent>
+          </Card>
 
           {message && (
             <div
-              className={`flex items-center gap-2 p-3 rounded-lg border text-sm ${
-                message.type === "success"
-                  ? "bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
-                  : "bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+              className={`mt-4 p-3 rounded-md text-sm ${
+                message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
               }`}
             >
-              {message.type === "success" ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
               {message.text}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {foodCart.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <ShoppingCart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Food Selection ({foodCart.length} items)
-            </CardTitle>
-            <CardDescription className="text-sm sm:text-base">
-              Adjust servings and quantities, then add all to your meal
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {foodCart.map((item) => {
-              const nutrition = calculatePortionNutrition(item.food, item.servings)
-              const totalCals = nutrition.calories * item.quantity
-
-              return (
-                <div key={item.food.id} className="p-3 bg-muted/50 rounded-lg border space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm">{item.food.name}</h4>
-                      <p className="text-xs text-muted-foreground">{item.food.description}</p>
-                      <p className="text-xs text-green-600 font-medium mt-1">
-                        {totalCals.toFixed(0)} cal total ({nutrition.calories.toFixed(0)} cal each)
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFromCart(item.food.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      ×
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Servings</Label>
-                      <Input
-                        type="number"
-                        min="0.5"
-                        step="0.5"
-                        value={item.servings}
-                        onChange={(e) => updateCartServings(item.food.id, Number.parseFloat(e.target.value) || 0.5)}
-                        className="text-sm h-8"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Quantity</Label>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.food.id, -1)}
-                          className="h-8 w-8 p-0"
-                          disabled={item.quantity <= 1}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="text-sm font-medium min-w-[2rem] text-center">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.food.id, 1)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-
-            <div className="border-t pt-3 mt-4">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-medium text-sm">Selection Total:</span>
-                <span className="font-bold text-green-600">{cartTotalCalories.toFixed(0)} calories</span>
-              </div>
-              <Button onClick={addAllToMeal} className="w-full bg-blue-600 hover:bg-blue-700 text-sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add All to Meal ({foodCart.length} items)
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Selected Foods */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            {mealType.charAt(0).toUpperCase() + mealType.slice(1)} Items
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">
-            Total: {totalCalories.toFixed(0)} calories, {totalProtein.toFixed(1)}g protein
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {selectedFoods.length === 0 ? (
-            <div className="text-center py-6 sm:py-8">
-              <p className="text-muted-foreground text-sm sm:text-base">
-                No foods added yet. Use the Nigerian food database above to add foods.
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-                Use the Portion Guide to help estimate serving sizes!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {selectedFoods.map((food) => (
-                <div
-                  key={food.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-lg border gap-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm flex flex-wrap items-center gap-2">
-                      <span className="truncate">{food.name}</span>
-                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-medium whitespace-nowrap">
-                        x{food.quantity}
-                      </span>
-                      {food.isNigerianFood && (
-                        <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded whitespace-nowrap">
-                          Nigerian Food
-                        </span>
-                      )}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {food.calories.toFixed(0)} cal total ({food.caloriesPerServing.toFixed(0)} cal each),{" "}
-                      {food.protein.toFixed(1)}g protein per {food.serving}
-                    </p>
-                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
-                      <span>Carbs: {food.carbs.toFixed(1)}g</span>
-                      <span>Fats: {food.fats.toFixed(1)}g</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 justify-end sm:justify-start">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => decreaseQuantity(food.id)}
-                      className="h-8 w-8 p-0"
-                      disabled={food.quantity <= 1}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="text-sm font-medium min-w-[2rem] text-center">{food.quantity}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => increaseQuantity(food.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFood(food.id)}
-                      className="h-8 px-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-2 text-xs"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              {/* Nutrition Summary */}
-              <div className="border-t pt-3 mt-4">
-                <h4 className="font-medium mb-2 text-sm sm:text-base">Meal Summary</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
-                  <div>
-                    Calories: <span className="font-medium">{totalCalories.toFixed(0)}</span>
-                  </div>
-                  <div>
-                    Protein: <span className="font-medium">{totalProtein.toFixed(1)}g</span>
-                  </div>
-                  <div>
-                    Carbs: <span className="font-medium">{totalCarbs.toFixed(1)}g</span>
-                  </div>
-                  <div>
-                    Fats: <span className="font-medium">{totalFats.toFixed(1)}g</span>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                onClick={saveMeal}
-                className="w-full mt-4 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-sm sm:text-base"
-                disabled={selectedFoods.length === 0 || isLoading}
-              >
-                {isLoading ? "Logging..." : `Log ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`}
-              </Button>
             </div>
           )}
         </CardContent>
