@@ -1,112 +1,84 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Removed dark mode custom variant */
+@layer base {
+  :root {
+    /* Updated color tokens to match modern design brief */
+    --background: 0 0% 100%;
+    --foreground: 215 25% 27%;
+    --card: 0 0% 99%;
+    --card-foreground: 215 25% 27%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+    --primary: 0 74% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 215 25% 27%;
+    --destructive: 0 74% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 0 0% 100%;
+    --ring: 0 74% 42%;
+    --chart-1: 0 74% 42%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 215 25% 27%;
+    --chart-4: 220 14% 96%;
+    --chart-5: 0 0% 99%;
+    --radius: 0.75rem;
+    --sidebar: 0 0% 99%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 0 74% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 92% 50%;
+    --sidebar-accent-foreground: 215 25% 27%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 0 74% 42%;
+  }
 
-:root {
-  /* Dark, rich backgrounds for better readability */
-  --background: oklch(0.25 0.02 120);
-  --foreground: oklch(0.95 0.01 85);
-
-  /* Cards with dark background */
-  --card: oklch(0.3 0.03 120);
-  --card-foreground: oklch(0.95 0.01 85);
-
-  /* Popovers */
-  --popover: oklch(0.28 0.03 120);
-  --popover-foreground: oklch(0.95 0.01 85);
-
-  /* Primary: Bright green for visibility */
-  --primary: oklch(0.65 0.18 145);
-  --primary-foreground: oklch(0.15 0.02 120);
-
-  /* Secondary: Lighter sage green */
-  --secondary: oklch(0.4 0.05 140);
-  --secondary-foreground: oklch(0.95 0.01 85);
-
-  /* Muted: Dark neutral */
-  --muted: oklch(0.22 0.02 120);
-  --muted-foreground: oklch(0.75 0.02 85);
-
-  /* Accent: Bright orange for visibility */
-  --accent: oklch(0.45 0.1 65);
-  --accent-foreground: oklch(0.95 0.01 85);
-
-  /* Destructive: Bright red for warnings */
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.98 0.01 85);
-
-  /* Borders and inputs with better contrast */
-  --border: oklch(0.4 0.03 120);
-  --input: oklch(0.32 0.03 120);
-  --ring: oklch(0.65 0.18 145);
-
-  /* Chart colors: brighter for dark background */
-  --chart-1: oklch(0.65 0.18 145); /* Green - vegetables */
-  --chart-2: oklch(0.7 0.2 55); /* Orange - fruits */
-  --chart-3: oklch(0.68 0.15 85); /* Yellow - grains */
-  --chart-4: oklch(0.6 0.15 25); /* Red - proteins */
-  --chart-5: oklch(0.55 0.15 260); /* Purple - dairy */
-
-  --radius: 0.625rem;
-
-  /* Sidebar with dark tones */
-  --sidebar: oklch(0.27 0.02 120);
-  --sidebar-foreground: oklch(0.95 0.01 85);
-  --sidebar-primary: oklch(0.65 0.18 145);
-  --sidebar-primary-foreground: oklch(0.15 0.02 120);
-  --sidebar-accent: oklch(0.4 0.05 140);
-  --sidebar-accent-foreground: oklch(0.95 0.01 85);
-  --sidebar-border: oklch(0.4 0.03 120);
-  --sidebar-ring: oklch(0.65 0.18 145);
-}
-
-/* Removed .dark class and all dark mode color variables */
-
-@theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  .dark {
+    --background: 215 28% 17%;
+    --foreground: 210 20% 98%;
+    --card: 215 28% 17%;
+    --card-foreground: 210 20% 98%;
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 0 74% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 215 32% 27%;
+    --muted-foreground: 217 10% 65%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 32% 27%;
+    --input: 215 32% 27%;
+    --ring: 0 74% 42%;
+    --chart-1: 0 74% 42%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 210 20% 98%;
+    --chart-4: 215 32% 27%;
+    --chart-5: 215 28% 17%;
+    --sidebar: 215 28% 17%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 0 74% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 92% 50%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 32% 27%;
+    --sidebar-ring: 0 74% 42%;
+  }
 }
 
 @layer base {
   * {
-    /* Removed border-border to fix utility class error */
-    @apply outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -206,7 +178,7 @@
 /* Added custom auth page styling for better visual hierarchy */
 @layer components {
   .auth-container {
-    @apply min-h-screen bg-muted;
+    @apply min-h-screen bg-gradient-to-br from-background via-card to-muted;
   }
 
   .auth-card {

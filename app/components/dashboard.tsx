@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/auth-context"
 import { useMeals } from "../hooks/use-meals"
+import { useTheme } from "next-themes"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   LogOut,
+  Moon,
+  Sun,
+  Monitor,
   Activity,
   Target,
   TrendingUp,
@@ -22,8 +26,6 @@ import {
   Utensils,
   Shield,
   SheetIcon as SleepIcon,
-  Dumbbell,
-  Hand,
 } from "lucide-react"
 import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
 import MealLogger from "./meal-logger"
@@ -34,15 +36,30 @@ import PersonalizedWelcome from "./personalized-welcome"
 import ProfileSettings from "./profile-settings"
 import AdminDashboard from "./admin-dashboard"
 import SleepTracker from "./sleep-tracker"
-import PhysicalActivities from "./physical-activities"
-import PortionSizingGuide from "./portion-sizing-guide"
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState("overview")
 
   const today = new Date().toISOString().split("T")[0]
   const { meals: todaysMeals, deleteMeal, isLoading: mealsLoading, refetch } = useMeals(today)
+
+  const toggleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark")
+    } else if (theme === "dark") {
+      setTheme("system")
+    } else {
+      setTheme("light")
+    }
+  }
+
+  const getThemeIcon = () => {
+    if (theme === "light") return <Sun className="h-3 w-3 xs:h-4 xs:w-4" />
+    if (theme === "dark") return <Moon className="h-3 w-3 xs:h-4 xs:w-4" />
+    return <Monitor className="h-3 w-3 xs:h-4 xs:w-4" />
+  }
 
   useEffect(() => {
     if (activeTab === "overview") {
@@ -70,32 +87,33 @@ export default function Dashboard() {
   const isAdmin = user.role === "admin"
 
   return (
-    <div className="min-h-screen-safe bg-muted">
+    <div className="min-h-screen-safe bg-background">
       <header className="border-b bg-card sticky top-0 z-50 pt-safe-top">
         <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Utensils className="h-6 w-6 sm:h-7 sm:w-7 text-green-600" />
-              <div>
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-green-800">GluGuide</h1>
-                <p className="hidden md:block text-xs text-muted-foreground">Your Personal Nutrition Companion</p>
-              </div>
+          <div className="flex items-center justify-between h-12 xs:h-14">
+            <div className="flex items-center gap-1 xs:gap-2">
+              <Utensils className="h-5 w-5 xs:h-6 xs:w-6 text-green-600" />
+              <h1 className="text-base xs:text-lg sm:text-xl font-bold text-green-800">GluGuide</h1>
               {isAdmin && (
-                <Badge variant="secondary" className="text-xs ml-2">
+                <Badge variant="secondary" className="text-xs">
                   <Shield className="h-3 w-3 mr-1" />
-                  <span className="hidden sm:inline">Admin</span>
+                  Admin
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1 xs:gap-2">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-7 w-7 xs:h-8 xs:w-8">
+                {getThemeIcon()}
+              </Button>
+
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("profile")}
-                className="flex items-center gap-2 hover:bg-muted/50 rounded-lg p-2"
+                className="flex items-center gap-1 xs:gap-2 hover:bg-muted/50 rounded-lg p-1 xs:p-1.5"
               >
-                <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" />
+                <Avatar className="h-5 w-5 xs:h-6 xs:w-6">
+                  <AvatarImage src="/placeholder.svg?height=24&width=24" />
                   <AvatarFallback className="bg-green-600 text-white text-xs">
                     {user.fullName
                       .split(" ")
@@ -104,8 +122,8 @@ export default function Dashboard() {
                       .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden lg:block text-left">
-                  <p className="text-sm font-medium">{user.fullName}</p>
+                <div className="hidden sm:block text-left">
+                  <p className="text-xs font-medium">{user.fullName}</p>
                   <p className="text-xs text-muted-foreground">
                     {isAdmin ? "Administrator" : `BMI: ${bmiResult.bmi} (${bmiResult.category})`}
                   </p>
@@ -116,9 +134,9 @@ export default function Dashboard() {
                 variant="ghost"
                 size="icon"
                 onClick={logout}
-                className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 sm:h-9 sm:w-9"
+                className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50 h-7 w-7 xs:h-8 xs:w-8"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3 w-3 xs:h-4 xs:w-4" />
               </Button>
             </div>
           </div>
@@ -128,85 +146,70 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6 py-3 xs:py-4 sm:py-6 pb-safe-bottom">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 xs:space-y-4">
           <TabsList
-            className={`grid w-full ${isAdmin ? "grid-cols-5 sm:grid-cols-10" : "grid-cols-5 sm:grid-cols-9"} gap-1 h-auto p-1 bg-muted/50`}
+            className={`grid w-full ${isAdmin ? "grid-cols-3 xs:grid-cols-8 lg:w-fit lg:grid-cols-8" : "grid-cols-3 xs:grid-cols-7 lg:w-fit lg:grid-cols-7"} h-auto p-0.5`}
           >
             <TabsTrigger
               value="overview"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <Activity className="h-4 w-4 sm:h-4 sm:w-4" />
+              <Activity className="h-3 w-3" />
+              <span className="xs:hidden">Over</span>
               <span className="hidden xs:inline">Overview</span>
-              <span className="xs:hidden">Home</span>
             </TabsTrigger>
             <TabsTrigger
               value="log-meal"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <PlusCircle className="h-4 w-4 sm:h-4 sm:w-4" />
-              <span className="hidden md:inline">Log Meal</span>
-              <span className="md:hidden">Log</span>
+              <PlusCircle className="h-3 w-3" />
+              <span className="xs:hidden">Log</span>
+              <span className="hidden xs:inline">Log Meal</span>
             </TabsTrigger>
             <TabsTrigger
               value="bmi"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <Calculator className="h-4 w-4 sm:h-4 sm:w-4" />
+              <Calculator className="h-3 w-3" />
               <span>BMI</span>
             </TabsTrigger>
             <TabsTrigger
               value="nutrition"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <TrendingUp className="h-4 w-4 sm:h-4 sm:w-4" />
-              <span className="hidden md:inline">Nutrition</span>
-              <span className="md:hidden">Stats</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="activities"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
-            >
-              <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-4 lg:w-4" />
-              <span className="hidden lg:inline">Activities</span>
-              <span className="lg:hidden">Fit</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="portion-guide"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
-            >
-              <Hand className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden lg:inline">Portion</span>
-              <span className="lg:hidden">Size</span>
+              <TrendingUp className="h-3 w-3" />
+              <span className="xs:hidden">Nutr</span>
+              <span className="hidden xs:inline">Nutrition</span>
             </TabsTrigger>
             <TabsTrigger
               value="recommendations"
-              className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 lg:gap-1.5 py-2 sm:py-2.5 px-1 sm:px-2 lg:px-3 text-[10px] sm:text-xs lg:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <BookOpen className="h-4 w-4 sm:h-4 sm:w-4" />
-              <span className="hidden md:inline">Tips</span>
-              <span className="md:hidden">Tips</span>
+              <BookOpen className="h-3 w-3" />
+              <span>Tips</span>
             </TabsTrigger>
             <TabsTrigger
               value="profile"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <User className="h-4 w-4 sm:h-4 sm:w-4" />
-              <span className="hidden md:inline">Profile</span>
-              <span className="md:hidden">Me</span>
+              <User className="h-3 w-3" />
+              <span className="xs:hidden">Prof</span>
+              <span className="hidden xs:inline">Profile</span>
             </TabsTrigger>
             <TabsTrigger
               value="sleep"
-              className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
-              <SleepIcon className="h-4 w-4 sm:h-4 sm:w-4" />
-              <span>Sleep</span>
+              <SleepIcon className="h-3 w-3" />
+              <span className="xs:hidden">Sleep</span>
+              <span className="hidden xs:inline">Sleep</span>
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger
                 value="admin"
-                className="flex flex-col sm:flex-row items-center gap-1 py-2 px-2 text-xs sm:text-sm data-[state=active]:bg-background"
+                className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
               >
-                <Shield className="h-4 w-4 sm:h-4 sm:w-4" />
-                <span>Admin</span>
+                <Shield className="h-3 w-3" />
+                <span className="xs:hidden">Admin</span>
+                <span className="hidden xs:inline">Admin</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -419,14 +422,6 @@ export default function Dashboard() {
 
           <TabsContent value="nutrition">
             <NutritionSummary />
-          </TabsContent>
-
-          <TabsContent value="activities">
-            <PhysicalActivities />
-          </TabsContent>
-
-          <TabsContent value="portion-guide">
-            <PortionSizingGuide />
           </TabsContent>
 
           <TabsContent value="recommendations">

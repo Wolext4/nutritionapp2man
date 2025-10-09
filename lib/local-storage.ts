@@ -133,539 +133,6 @@ const STORAGE_KEYS = {
   SLEEP_ENTRIES: "naijafit_sleep_entries",
 } as const
 
-// -----------------------------------------------------------------------------
-// FOOD DATABASE (Locally Available Foods in Ibadan)
-// - English names only
-// - Static IDs
-// - Calorie values taken exactly from your provided table
-// - Placeholder zeros for other macros so app logic continues to work
-// -----------------------------------------------------------------------------
-
-export const FOOD_DATABASE: {
-  id: string
-  name: string
-  category: string
-  portion: string
-  grams: number
-  nutrition: {
-    calories: number
-    protein: number
-    carbs: number
-    fats: number
-    fiber: number
-    iron: number
-    vitaminA: number
-  }
-}[] = [
-  // 1. Whole Grains and Tubers
-  {
-    id: "cooked_rice",
-    name: "Cooked rice (Iresi)",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 260, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "boiled_yam",
-    name: "Boiled yam (Isu)",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 220, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "boiled_plantain",
-    name: "Boiled plantain (Ogede dodo)",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 180, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cooked_maize_pap",
-    name: "Cooked maize (Pap/Ogi)",
-    category: "Whole Grains and Tubers",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 150, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cooked_garri_eba",
-    name: "Cooked garri (Eba)",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 260, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cooked_semovita_semo",
-    name: "Cooked semovita (Semo)",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 250, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cooked_wheat_swallow",
-    name: "Cooked wheat (swallow)",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 230, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "boiled_irish_potatoes",
-    name: "Boiled Irish potatoes",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 170, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "boiled_sweet_potatoes",
-    name: "Boiled sweet potatoes",
-    category: "Whole Grains and Tubers",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 180, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 2. Legumes (Beans and Pulses)
-  {
-    id: "boiled_beans",
-    name: "Boiled beans (Ewa)",
-    category: "Legumes",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 240, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "moinmoin",
-    name: "Moin-moin (steamed bean pudding)",
-    category: "Legumes",
-    portion: "1 wrap (~200g)",
-    grams: 200,
-    nutrition: { calories: 230, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "akara",
-    name: "Akara (bean cake)",
-    category: "Legumes",
-    portion: "3 balls (~200g)",
-    grams: 200,
-    nutrition: { calories: 300, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "okpa",
-    name: "Boiled bambara nut (Okpa)",
-    category: "Legumes",
-    portion: "1 wrap (~200g)",
-    grams: 200,
-    nutrition: { calories: 250, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "lentils_cooked",
-    name: "Lentils (cooked)",
-    category: "Legumes",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 230, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "soybeans_cooked",
-    name: "Soybeans (cooked)",
-    category: "Legumes",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 250, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 3. Nuts and Seeds
-  {
-    id: "groundnut",
-    name: "Groundnut (Epa)",
-    category: "Nuts and Seeds",
-    portion: "1 handful (40g)",
-    grams: 40,
-    nutrition: { calories: 250, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cashew",
-    name: "Cashew nuts (Kaju)",
-    category: "Nuts and Seeds",
-    portion: "1 handful (40g)",
-    grams: 40,
-    nutrition: { calories: 230, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "egusi",
-    name: "Egusi (melon seed)",
-    category: "Nuts and Seeds",
-    portion: "1 handful (40g)",
-    grams: 40,
-    nutrition: { calories: 240, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "sesame_seed",
-    name: "Sesame seed (Beniseed)",
-    category: "Nuts and Seeds",
-    portion: "1 handful (40g)",
-    grams: 40,
-    nutrition: { calories: 230, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "coconut_slice",
-    name: "Coconut (Agbon)",
-    category: "Nuts and Seeds",
-    portion: "1 slice (~40g)",
-    grams: 40,
-    nutrition: { calories: 140, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "tiger_nut",
-    name: "Tiger nut (Ofio)",
-    category: "Nuts and Seeds",
-    portion: "1 handful (40g)",
-    grams: 40,
-    nutrition: { calories: 120, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 4. Fruits
-  {
-    id: "orange",
-    name: "Orange (Osan)",
-    category: "Fruits",
-    portion: "1 medium",
-    grams: 130,
-    nutrition: { calories: 60, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "banana",
-    name: "Banana (Ogede)",
-    category: "Fruits",
-    portion: "1 medium (120g)",
-    grams: 120,
-    nutrition: { calories: 100, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "mango",
-    name: "Mango (Mangoro)",
-    category: "Fruits",
-    portion: "1 small (150g)",
-    grams: 150,
-    nutrition: { calories: 90, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "apple",
-    name: "Apple (Apù)",
-    category: "Fruits",
-    portion: "1 medium",
-    grams: 150,
-    nutrition: { calories: 80, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "watermelon",
-    name: "Watermelon (Egunsi omi)",
-    category: "Fruits",
-    portion: "1 wedge (~200g)",
-    grams: 200,
-    nutrition: { calories: 60, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "pawpaw",
-    name: "Pawpaw (Ibepe)",
-    category: "Fruits",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 80, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "pineapple",
-    name: "Pineapple (Ope oyinbo)",
-    category: "Fruits",
-    portion: "1 fist (200g)",
-    grams: 200,
-    nutrition: { calories: 90, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "guava",
-    name: "Guava (Gova)",
-    category: "Fruits",
-    portion: "2 small (200g)",
-    grams: 200,
-    nutrition: { calories: 100, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 5. Vegetables
-  {
-    id: "spinach",
-    name: "Spinach (Efotete)",
-    category: "Vegetables",
-    portion: "1 fist (100g cooked)",
-    grams: 100,
-    nutrition: { calories: 35, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "fluted_pumpkin",
-    name: "Fluted pumpkin leaves (Ugu)",
-    category: "Vegetables",
-    portion: "1 fist (100g cooked)",
-    grams: 100,
-    nutrition: { calories: 40, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "okra",
-    name: "Okra (Ila)",
-    category: "Vegetables",
-    portion: "1 fist (100g cooked)",
-    grams: 100,
-    nutrition: { calories: 40, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "amaranthus",
-    name: "Amaranthus leaves (Efo shoko)",
-    category: "Vegetables",
-    portion: "1 fist (100g cooked)",
-    grams: 100,
-    nutrition: { calories: 30, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "tomato",
-    name: "Tomato (Tomati)",
-    category: "Vegetables",
-    portion: "1 medium (100g)",
-    grams: 100,
-    nutrition: { calories: 20, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "garden_egg",
-    name: "Garden egg (Igba)",
-    category: "Vegetables",
-    portion: "2 pieces (100g)",
-    grams: 100,
-    nutrition: { calories: 35, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cabbage",
-    name: "Cabbage (Efo oyinbo)",
-    category: "Vegetables",
-    portion: "1 fist (100g)",
-    grams: 100,
-    nutrition: { calories: 25, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "carrot",
-    name: "Carrot (Karooti)",
-    category: "Vegetables",
-    portion: "1 fist (100g)",
-    grams: 100,
-    nutrition: { calories: 45, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 6. Milk and Milk Products
-  {
-    id: "whole_milk",
-    name: "Whole liquid milk",
-    category: "Milk and Milk Products",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 150, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "lowfat_milk",
-    name: "Low-fat milk",
-    category: "Milk and Milk Products",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 100, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "nonfat_milk",
-    name: "Non-fat milk",
-    category: "Milk and Milk Products",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 80, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "evaporated_milk",
-    name: "Evaporated milk",
-    category: "Milk and Milk Products",
-    portion: "1/2 cup (120ml)",
-    grams: 120,
-    nutrition: { calories: 150, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "yogurt_plain",
-    name: "Yogurt (plain)",
-    category: "Milk and Milk Products",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 120, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 7. Eggs and Substitutes
-  {
-    id: "boiled_egg",
-    name: "Boiled egg (Eyin)",
-    category: "Eggs and Substitutes",
-    portion: "1 large",
-    grams: 50,
-    nutrition: { calories: 80, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "fried_egg",
-    name: "Fried egg (Eyin din)",
-    category: "Eggs and Substitutes",
-    portion: "1 large",
-    grams: 50,
-    nutrition: { calories: 120, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "omelette",
-    name: "Omelette (with tomato & onion)",
-    category: "Eggs and Substitutes",
-    portion: "1 serving (~120g)",
-    grams: 120,
-    nutrition: { calories: 150, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "tofu",
-    name: "Tofu (Wara soy)",
-    category: "Eggs and Substitutes",
-    portion: "1 slice (100g)",
-    grams: 100,
-    nutrition: { calories: 90, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 8. Meat, Fish, and Poultry
-  {
-    id: "chicken",
-    name: "Chicken (Adie)",
-    category: "Meat, Fish, and Poultry",
-    portion: "1 fist (90g)",
-    grams: 90,
-    nutrition: { calories: 180, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "beef",
-    name: "Beef (Eran malu)",
-    category: "Meat, Fish, and Poultry",
-    portion: "1 fist (90g)",
-    grams: 90,
-    nutrition: { calories: 200, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "goat_meat",
-    name: "Goat meat (Eran ewure)",
-    category: "Meat, Fish, and Poultry",
-    portion: "1 fist (90g)",
-    grams: 90,
-    nutrition: { calories: 190, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "fish",
-    name: "Fish (Eja)",
-    category: "Meat, Fish, and Poultry",
-    portion: "1 fist (90g)",
-    grams: 90,
-    nutrition: { calories: 170, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "turkey",
-    name: "Turkey (Tọki)",
-    category: "Meat, Fish, and Poultry",
-    portion: "1 fist (90g)",
-    grams: 90,
-    nutrition: { calories: 190, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "snail",
-    name: "Snail (Igbin)",
-    category: "Meat, Fish, and Poultry",
-    portion: "1 fist (90g)",
-    grams: 90,
-    nutrition: { calories: 120, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 9. Oils and Fats
-  {
-    id: "palm_oil",
-    name: "Palm oil (Epo pupa)",
-    category: "Oils and Fats",
-    portion: "1 tsp (5ml)",
-    grams: 5,
-    nutrition: { calories: 45, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "groundnut_oil",
-    name: "Groundnut oil (Epo epa)",
-    category: "Oils and Fats",
-    portion: "1 tsp (5ml)",
-    grams: 5,
-    nutrition: { calories: 45, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "vegetable_oil",
-    name: "Vegetable oil (Epo elepo)",
-    category: "Oils and Fats",
-    portion: "1 tsp (5ml)",
-    grams: 5,
-    nutrition: { calories: 45, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "margarine",
-    name: "Margarine",
-    category: "Oils and Fats",
-    portion: "1 tsp (5g)",
-    grams: 5,
-    nutrition: { calories: 35, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "butter",
-    name: "Butter",
-    category: "Oils and Fats",
-    portion: "1 tsp (5g)",
-    grams: 5,
-    nutrition: { calories: 35, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-
-  // 10. Beverages and Others
-  {
-    id: "cocoa_without",
-    name: "Cocoa beverage (without milk/sugar)",
-    category: "Beverages and Others",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 80, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "cocoa_with",
-    name: "Cocoa beverage (with milk and sugar)",
-    category: "Beverages and Others",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 150, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "fruit_juice_unsweetened",
-    name: "Fruit juice (unsweetened)",
-    category: "Beverages and Others",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 100, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-  {
-    id: "zobo_unsweetened",
-    name: "Zobo drink (unsweetened)",
-    category: "Beverages and Others",
-    portion: "1 cup (240ml)",
-    grams: 240,
-    nutrition: { calories: 50, protein: 0, carbs: 0, fats: 0, fiber: 0, iron: 0, vitaminA: 0 },
-  },
-]
-
 // Utility functions
 function getFromStorage<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue
@@ -691,31 +158,27 @@ function setToStorage<T>(key: string, value: T): void {
 
 // Database operations
 export class LocalDatabase {
-  // Expose food database
-  static getFoodDatabase() {
-    return FOOD_DATABASE
-  }
-
   // Initialize with demo data and personalized content
   static initialize(): void {
     if (typeof window === "undefined") return
 
     console.log("[v0] Initializing LocalDatabase...")
 
+    // Create basic demo users without meal data
     const demoUsers: User[] = [
       {
         id: "demo-user-id-12345",
         email: "test@naijafit.com",
-        fullName: "Demo User",
+        fullName: "Adunni Okafor",
         age: 28,
         gender: "female",
         height: 165,
         weight: 68,
-        waistCircumference: 75,
-        location: "Nigeria",
-        occupation: "User",
+        waistCircumference: 75, // Added waist circumference to demo user
+        location: "Lagos, Nigeria",
+        occupation: "Software Developer",
         healthConditions: [],
-        fitnessGoals: ["weight_maintenance"],
+        fitnessGoals: ["weight_maintenance", "muscle_building"],
         role: "user",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -729,7 +192,7 @@ export class LocalDatabase {
         gender: "other",
         height: 170,
         weight: 70,
-        waistCircumference: 80,
+        waistCircumference: 80, // Added waist circumference to admin user
         location: "Nigeria",
         occupation: "System Administrator",
         healthConditions: [],
@@ -760,6 +223,7 @@ export class LocalDatabase {
       "admin-user-id-67890": "admin2024!",
     }
 
+    // Add missing passwords
     let passwordsUpdated = false
     for (const [userId, password] of Object.entries(demoPasswords)) {
       if (!existingPasswords[userId]) {
@@ -781,10 +245,10 @@ export class LocalDatabase {
       .map((user) => ({
         userId: user.id,
         preferences: {
-          culturalBackground: user.id === "demo-user-id-12345" ? ["general-nigerian"] : ["general-nigerian"],
+          culturalBackground: user.id === "demo-user-id-12345" ? ["yoruba", "general-nigerian"] : ["general-nigerian"],
           dietaryRestrictions: [],
           activityLevel: "moderate" as const,
-          healthGoals: user.id === "demo-user-id-12345" ? ["balanced"] : ["system_management"],
+          healthGoals: user.id === "demo-user-id-12345" ? ["balanced", "muscle-gain"] : ["system_management"],
           favoriteNigerianFoods: [],
           mealPreferences: {
             breakfast: [],
@@ -804,8 +268,8 @@ export class LocalDatabase {
           },
           weeklyGoals: {
             calorieTarget: 2000,
-            proteinTarget: 100,
-            exerciseDays: 3,
+            proteinTarget: user.id === "demo-user-id-12345" ? 120 : 100,
+            exerciseDays: user.id === "demo-user-id-12345" ? 4 : 3,
           },
         },
         personalizedRecommendations: {
@@ -826,27 +290,6 @@ export class LocalDatabase {
     const existingMeals = getFromStorage<Meal[]>(STORAGE_KEYS.MEALS, [])
     if (existingMeals.length === 0) {
       setToStorage(STORAGE_KEYS.MEALS, [])
-    }
-
-    const demoUserId = "demo-user-id-12345"
-    const existingStats = getFromStorage<UserStats[]>(STORAGE_KEYS.USER_STATS, [])
-    const demoUserStats = existingStats.find((s) => s.userId === demoUserId)
-
-    if (!demoUserStats) {
-      const initialStats: UserStats = {
-        userId: demoUserId,
-        totalMealsLogged: 0,
-        averageDailyCalories: 0,
-        favoriteFood: "Not determined yet",
-        longestStreak: 0,
-        currentStreak: 0,
-        weightProgress: [{ date: new Date().toISOString().split("T")[0], weight: 68 }],
-        achievements: ["Welcome to GluGuide!"],
-        lastUpdated: new Date().toISOString(),
-      }
-      existingStats.push(initialStats)
-      setToStorage(STORAGE_KEYS.USER_STATS, existingStats)
-      console.log("[v0] Added initial stats for demo user")
     }
 
     // Mark as initialized
