@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/auth-context"
 import { useMeals } from "../hooks/use-meals"
-import { useTheme } from "next-themes"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,9 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   LogOut,
-  Moon,
-  Sun,
-  Monitor,
   Activity,
   Target,
   TrendingUp,
@@ -26,6 +22,7 @@ import {
   Utensils,
   Shield,
   SheetIcon as SleepIcon,
+  Dumbbell,
 } from "lucide-react"
 import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
 import MealLogger from "./meal-logger"
@@ -36,30 +33,14 @@ import PersonalizedWelcome from "./personalized-welcome"
 import ProfileSettings from "./profile-settings"
 import AdminDashboard from "./admin-dashboard"
 import SleepTracker from "./sleep-tracker"
+import PhysicalActivities from "./physical-activities"
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
-  const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState("overview")
 
   const today = new Date().toISOString().split("T")[0]
   const { meals: todaysMeals, deleteMeal, isLoading: mealsLoading, refetch } = useMeals(today)
-
-  const toggleTheme = () => {
-    if (theme === "light") {
-      setTheme("dark")
-    } else if (theme === "dark") {
-      setTheme("system")
-    } else {
-      setTheme("light")
-    }
-  }
-
-  const getThemeIcon = () => {
-    if (theme === "light") return <Sun className="h-3 w-3 xs:h-4 xs:w-4" />
-    if (theme === "dark") return <Moon className="h-3 w-3 xs:h-4 xs:w-4" />
-    return <Monitor className="h-3 w-3 xs:h-4 xs:w-4" />
-  }
 
   useEffect(() => {
     if (activeTab === "overview") {
@@ -90,7 +71,7 @@ export default function Dashboard() {
     <div className="min-h-screen-safe bg-background">
       <header className="border-b bg-card sticky top-0 z-50 pt-safe-top">
         <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-12 xs:h-14">
+          <div className="flex items-center justify-between h-12 xs:h-14 bg-card">
             <div className="flex items-center gap-1 xs:gap-2">
               <Utensils className="h-5 w-5 xs:h-6 xs:w-6 text-green-600" />
               <h1 className="text-base xs:text-lg sm:text-xl font-bold text-green-800">GluGuide</h1>
@@ -103,10 +84,6 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center gap-1 xs:gap-2">
-              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-7 w-7 xs:h-8 xs:w-8">
-                {getThemeIcon()}
-              </Button>
-
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("profile")}
@@ -146,23 +123,21 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6 py-3 xs:py-4 sm:py-6 pb-safe-bottom">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 xs:space-y-4">
           <TabsList
-            className={`grid w-full ${isAdmin ? "grid-cols-3 xs:grid-cols-8 lg:w-fit lg:grid-cols-8" : "grid-cols-3 xs:grid-cols-7 lg:w-fit lg:grid-cols-7"} h-auto p-0.5`}
+            className={`grid w-full ${isAdmin ? "grid-cols-3 xs:grid-cols-9 lg:w-fit lg:grid-cols-9" : "grid-cols-3 xs:grid-cols-8 lg:w-fit lg:grid-cols-8"} h-auto p-0.5`}
           >
             <TabsTrigger
               value="overview"
               className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
               <Activity className="h-3 w-3" />
-              <span className="xs:hidden">Over</span>
-              <span className="hidden xs:inline">Overview</span>
+              <span>Overview</span>
             </TabsTrigger>
             <TabsTrigger
               value="log-meal"
               className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
               <PlusCircle className="h-3 w-3" />
-              <span className="xs:hidden">Log</span>
-              <span className="hidden xs:inline">Log Meal</span>
+              <span>Log Meal</span>
             </TabsTrigger>
             <TabsTrigger
               value="bmi"
@@ -176,8 +151,7 @@ export default function Dashboard() {
               className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
               <TrendingUp className="h-3 w-3" />
-              <span className="xs:hidden">Nutr</span>
-              <span className="hidden xs:inline">Nutrition</span>
+              <span>Nutrition</span>
             </TabsTrigger>
             <TabsTrigger
               value="recommendations"
@@ -191,16 +165,21 @@ export default function Dashboard() {
               className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
               <User className="h-3 w-3" />
-              <span className="xs:hidden">Prof</span>
-              <span className="hidden xs:inline">Profile</span>
+              <span>Profile</span>
             </TabsTrigger>
             <TabsTrigger
               value="sleep"
               className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
             >
               <SleepIcon className="h-3 w-3" />
-              <span className="xs:hidden">Sleep</span>
-              <span className="hidden xs:inline">Sleep</span>
+              <span>Sleep</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="activities"
+              className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
+            >
+              <Dumbbell className="h-3 w-3" />
+              <span>Activities</span>
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger
@@ -208,8 +187,7 @@ export default function Dashboard() {
                 className="flex flex-col xs:flex-row items-center gap-0.5 xs:gap-1 py-1.5 xs:py-1 text-xs"
               >
                 <Shield className="h-3 w-3" />
-                <span className="xs:hidden">Admin</span>
-                <span className="hidden xs:inline">Admin</span>
+                <span>Admin</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -394,7 +372,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-sm xs:text-base">Quick Health Tips</CardTitle>
                 <CardDescription className="text-xs">Based on your BMI and today's intake</CardDescription>
@@ -402,9 +380,12 @@ export default function Dashboard() {
               <CardContent>
                 <div className="space-y-2 xs:space-y-3">
                   {bmiResult.recommendations.slice(0, 3).map((rec, index) => (
-                    <div key={index} className="flex items-start gap-2 xs:gap-3 p-2 xs:p-3 bg-muted/50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-start gap-2 xs:gap-3 p-2 xs:p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg"
+                    >
                       <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-green-600 rounded-full mt-1.5 xs:mt-2 flex-shrink-0" />
-                      <p className="text-xs xs:text-sm">{rec}</p>
+                      <p className="text-xs xs:text-sm text-white dark:text-gray-100">{rec}</p>
                     </div>
                   ))}
                 </div>
@@ -434,6 +415,10 @@ export default function Dashboard() {
 
           <TabsContent value="sleep">
             <SleepTracker />
+          </TabsContent>
+
+          <TabsContent value="activities">
+            <PhysicalActivities />
           </TabsContent>
 
           {isAdmin && (

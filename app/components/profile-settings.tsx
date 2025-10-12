@@ -154,7 +154,6 @@ function ProfileSettingsForm() {
     setMessage(null)
 
     try {
-      // Validation
       if (
         !formData.fullName ||
         !formData.email ||
@@ -172,20 +171,20 @@ function ProfileSettingsForm() {
       const height = Number.parseFloat(formData.height)
       const weight = Number.parseFloat(formData.weight)
 
-      if (age < 13 || age > 120) {
-        setMessage({ type: "error", text: "Age must be between 13 and 120" })
+      if (age <= 0) {
+        setMessage({ type: "error", text: "Age must be a positive number" })
         setIsUpdating(false)
         return
       }
 
-      if (height < 100 || height > 250) {
-        setMessage({ type: "error", text: "Height must be between 100cm and 250cm" })
+      if (height <= 0) {
+        setMessage({ type: "error", text: "Height must be a positive number" })
         setIsUpdating(false)
         return
       }
 
-      if (weight < 30 || weight > 300) {
-        setMessage({ type: "error", text: "Weight must be between 30kg and 300kg" })
+      if (weight <= 0) {
+        setMessage({ type: "error", text: "Weight must be a positive number" })
         setIsUpdating(false)
         return
       }
@@ -449,8 +448,6 @@ function ProfileSettingsForm() {
                 <Input
                   id="age"
                   type="number"
-                  min="13"
-                  max="120"
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                   required
@@ -464,8 +461,6 @@ function ProfileSettingsForm() {
                 <Input
                   id="height"
                   type="number"
-                  min="100"
-                  max="250"
                   step="0.1"
                   value={formData.height}
                   onChange={(e) => setFormData({ ...formData, height: e.target.value })}
@@ -480,8 +475,6 @@ function ProfileSettingsForm() {
                 <Input
                   id="weight"
                   type="number"
-                  min="30"
-                  max="300"
                   step="0.1"
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
@@ -517,7 +510,7 @@ function ProfileSettingsForm() {
                     className={`p-4 border rounded-lg cursor-pointer transition-all hover:border-primary/50 ${
                       profileData.culturalBackground.includes(group.id)
                         ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-border hover:bg-muted/50"
+                        : "border-gray-200 dark:border-gray-700 hover:bg-muted/50"
                     }`}
                     onClick={() => toggleCulturalBackground(group.id)}
                   >
@@ -538,7 +531,7 @@ function ProfileSettingsForm() {
                     className={`p-4 border rounded-lg cursor-pointer transition-all hover:border-primary/50 ${
                       profileData.healthGoals.includes(goal.id)
                         ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-border hover:bg-muted/50"
+                        : "border-gray-200 dark:border-gray-700 hover:bg-muted/50"
                     }`}
                     onClick={() => toggleHealthGoal(goal.id)}
                   >

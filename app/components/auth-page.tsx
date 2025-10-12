@@ -152,7 +152,7 @@ export default function AuthPage() {
                       value={loginData.email}
                       onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                       required
-                      className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                      className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                     />
                   </div>
                   <div className="space-y-2">
@@ -167,7 +167,7 @@ export default function AuthPage() {
                         value={loginData.password}
                         onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                         required
-                        className="h-12 text-base pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        className="h-12 text-base text-gray-900 pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                       <Button
                         type="button"
@@ -234,7 +234,7 @@ export default function AuthPage() {
                       value={signupData.fullName}
                       onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
                       required
-                      className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                      className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                     />
                   </div>
 
@@ -249,7 +249,7 @@ export default function AuthPage() {
                       value={signupData.email}
                       onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                       required
-                      className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                      className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                     />
                   </div>
 
@@ -267,7 +267,7 @@ export default function AuthPage() {
                         value={signupData.age}
                         onChange={(e) => setSignupData({ ...signupData, age: e.target.value })}
                         required
-                        className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -278,7 +278,7 @@ export default function AuthPage() {
                         value={signupData.gender}
                         onValueChange={(value) => setSignupData({ ...signupData, gender: value })}
                       >
-                        <SelectTrigger className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500">
+                        <SelectTrigger className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
@@ -304,7 +304,7 @@ export default function AuthPage() {
                         value={signupData.height}
                         onChange={(e) => setSignupData({ ...signupData, height: e.target.value })}
                         required
-                        className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -320,7 +320,7 @@ export default function AuthPage() {
                         value={signupData.weight}
                         onChange={(e) => setSignupData({ ...signupData, weight: e.target.value })}
                         required
-                        className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                     </div>
                   </div>
@@ -333,11 +333,10 @@ export default function AuthPage() {
                       id="signup-waist"
                       type="number"
                       placeholder="80"
-                      min="50"
                       max="200"
                       value={signupData.waistCircumference}
                       onChange={(e) => setSignupData({ ...signupData, waistCircumference: e.target.value })}
-                      className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                      className="h-12 text-base text-gray-900 border-gray-300 focus:border-green-500 focus:ring-green-500"
                     />
                     <p className="text-xs text-gray-500">
                       Optional: Measure around your waist at the narrowest point for better health insights
@@ -356,7 +355,7 @@ export default function AuthPage() {
                         value={signupData.password}
                         onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                         required
-                        className="h-12 text-base pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        className="h-12 text-base text-gray-900 pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                       <Button
                         type="button"
@@ -386,7 +385,7 @@ export default function AuthPage() {
                         value={signupData.confirmPassword}
                         onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
                         required
-                        className="h-12 text-base pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        className="h-12 text-base text-gray-900 pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
                       />
                       <Button
                         type="button"

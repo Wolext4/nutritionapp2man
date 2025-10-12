@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @layer base {
   :root {
@@ -78,100 +77,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    /* Removed border-border to fix utility class error */
+    @apply border-gray-200 dark:border-gray-700 outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-  }
-
-  /* Enhanced mobile-specific optimizations for better touch interaction and readability */
-  @media (max-width: 767px) {
-    /* Improve touch targets on mobile */
-    button,
-    [role="button"] {
-      min-height: 44px;
-      min-width: 44px;
-    }
-
-    /* Better text sizing for mobile readability */
-    .text-xs {
-      font-size: 0.75rem;
-      line-height: 1.4;
-    }
-
-    .text-sm {
-      font-size: 0.875rem;
-      line-height: 1.5;
-    }
-
-    .text-base {
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-
-    /* Optimize spacing for mobile */
-    .space-y-1 > * + * {
-      margin-top: 0.25rem;
-    }
-
-    .space-y-2 > * + * {
-      margin-top: 0.5rem;
-    }
-
-    .space-y-3 > * + * {
-      margin-top: 0.75rem;
-    }
-
-    .space-y-4 > * + * {
-      margin-top: 1rem;
-    }
-
-    /* Ensure proper safe area handling */
-    .pt-safe-top {
-      padding-top: max(1rem, env(safe-area-inset-top));
-    }
-
-    .pb-safe-bottom {
-      padding-bottom: max(1rem, env(safe-area-inset-bottom));
-    }
-
-    /* Optimize card padding for mobile */
-    .card {
-      padding: 1rem;
-    }
-
-    /* Better input field sizing for mobile */
-    input,
-    select,
-    textarea {
-      min-height: 44px;
-      font-size: 16px; /* Prevents zoom on iOS */
-    }
-  }
-
-  /* Added support for different mobile aspect ratios */
-  @media (max-width: 767px) and (min-aspect-ratio: 9 / 16) {
-    /* Tall screens (18:9, 19.5:9, etc.) */
-    .min-h-screen-safe {
-      min-height: 100dvh;
-    }
-
-    /* Adjust spacing for tall screens */
-    .space-y-6 > * + * {
-      margin-top: 2rem;
-    }
-  }
-
-  @media (max-width: 767px) and (max-aspect-ratio: 9 / 16) {
-    /* Wide screens or landscape */
-    .min-h-screen-safe {
-      min-height: 100svh;
-    }
-
-    /* Compact spacing for landscape */
-    .space-y-6 > * + * {
-      margin-top: 1rem;
-    }
   }
 }
 
@@ -182,11 +92,13 @@
   }
 
   .auth-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-xl;
+    /* Replaced border-border with border-gray-200 dark:border-gray-700 */
+    @apply bg-card/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700/50 shadow-xl hover:shadow-lg transition-all duration-200;
   }
 
   .auth-input {
-    @apply bg-input border-border/60 focus:border-primary/50 focus:ring-primary/20;
+    /* Replaced border-border with border-gray-200 dark:border-gray-700 */
+    @apply bg-input border-gray-200 dark:border-gray-700/60 focus:border-primary/50 focus:ring-primary/20;
   }
 
   .auth-button-primary {
@@ -196,4 +108,44 @@
   .auth-button-secondary {
     @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-md hover:shadow-lg transition-all duration-200;
   }
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }

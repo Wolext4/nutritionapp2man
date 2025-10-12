@@ -222,7 +222,10 @@ export default function Recommendations() {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {recommendations.foods.map((food, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 bg-background border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 p-3 bg-background border rounded-lg text-white dark:text-foreground"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm">{food.name}</span>
@@ -230,7 +233,7 @@ export default function Recommendations() {
                           {food.category}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">{food.benefit}</p>
+                      <p className="text-xs text-gray-200 dark:text-muted-foreground">{food.benefit}</p>
                     </div>
                   </div>
                 ))}
@@ -246,7 +249,7 @@ export default function Recommendations() {
                 {recommendations.tips.map((tip, index) => (
                   <div key={index} className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-current rounded-full mt-2 flex-shrink-0" />
-                    <p className="text-sm">{tip}</p>
+                    <p className="text-sm text-white dark:text-foreground">{tip}</p>
                   </div>
                 ))}
               </div>

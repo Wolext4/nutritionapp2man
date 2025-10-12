@@ -169,8 +169,6 @@ export default function BMICalculator() {
                 placeholder="170"
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
-                min="100"
-                max="250"
               />
             </div>
             <div className="space-y-2">
@@ -181,8 +179,6 @@ export default function BMICalculator() {
                 placeholder="70"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                min="30"
-                max="300"
                 step="0.1"
               />
             </div>
@@ -194,8 +190,6 @@ export default function BMICalculator() {
                 placeholder="80"
                 value={waistCircumference}
                 onChange={(e) => setWaistCircumference(e.target.value)}
-                min="50"
-                max="200"
                 step="0.1"
               />
               <p className="text-xs text-muted-foreground">Optional: Measure at narrowest point</p>

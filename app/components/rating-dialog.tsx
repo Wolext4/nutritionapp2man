@@ -56,13 +56,13 @@ export default function RatingDialog({ isOpen, onClose, userId }: RatingDialogPr
   if (showThankYou) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-background">
           <DialogHeader className="text-center">
             <div className="flex justify-center mb-4">
               <Heart className="h-12 w-12 text-red-500 fill-current" />
             </div>
             <DialogTitle className="text-2xl font-bold text-green-700">Thank You!</DialogTitle>
-            <DialogDescription className="text-lg text-gray-600">
+            <DialogDescription className="text-lg text-gray-600 dark:text-gray-300">
               We really appreciate you taking the time to rate GluGuide. Your feedback helps us make the app better for
               everyone!
             </DialogDescription>
@@ -79,7 +79,7 @@ export default function RatingDialog({ isOpen, onClose, userId }: RatingDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-background">
         <DialogHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="flex gap-1">
@@ -89,7 +89,7 @@ export default function RatingDialog({ isOpen, onClose, userId }: RatingDialogPr
             </div>
           </div>
           <DialogTitle className="text-2xl font-bold text-green-700">Enjoying GluGuide?</DialogTitle>
-          <DialogDescription className="text-gray-600">
+          <DialogDescription className="text-gray-600 dark:text-gray-300">
             Help us improve by sharing your experience! Your feedback means the world to us and helps other users
             discover our nutrition monitoring app.
           </DialogDescription>
@@ -105,7 +105,7 @@ export default function RatingDialog({ isOpen, onClose, userId }: RatingDialogPr
           <Button
             variant="outline"
             onClick={handleMaybeLater}
-            className="h-12 text-base border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+            className="h-12 text-base border-gray-300 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
           >
             Maybe Later
           </Button>

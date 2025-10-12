@@ -263,7 +263,7 @@ export default function Tutorial({ onComplete, onSkip }: TutorialProps) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl border-0">
+      <Card className="w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 bg-background">
         <CardHeader className="relative bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white p-8">
           <Button
             variant="ghost"
@@ -294,7 +294,7 @@ export default function Tutorial({ onComplete, onSkip }: TutorialProps) {
           </div>
         </CardHeader>
 
-        <CardContent className="p-8 min-h-[400px]">
+        <CardContent className="p-8 min-h-[400px] bg-background">
           {step.content}
 
           <div className="flex justify-between items-center pt-8 mt-8 border-t">

@@ -13,22 +13,64 @@ interface PortionSize {
 
 const portionSizes: PortionSize[] = [
   {
+    id: "protein-portion",
+    foodType: "1 portion of Protein/Meat",
+    handMethod: "Matchbox size (palm of hand)",
+    imageSrc: "/images/meat-portion.jpg",
+  },
+  {
     id: "grains-portion",
-    foodType: "1 portion of Grains",
-    handMethod: "Cupped palm",
-    imageSrc: "/images/fruits.png",
+    foodType: "1 portion of Grains/Rice",
+    handMethod: "Cupped palm or spoonful",
+    imageSrc: "/images/rice-spoon.jpg",
   },
   {
-    id: "swallow-portion",
-    foodType: "1 Portion of swallow",
-    handMethod: "Closed fist",
-    imageSrc: "/images/carbohydrate-portion.png",
+    id: "vegetables-portion-1",
+    foodType: "1 portion of Vegetables",
+    handMethod: "Two cupped palms (leafy greens)",
+    imageSrc: "/images/leafy-greens.jpg",
   },
   {
-    id: "vegetables-portion",
-    foodType: "1 portion of vegetables",
-    handMethod: "Two cupped palms",
-    imageSrc: "/images/fruits.png",
+    id: "vegetables-portion-2",
+    foodType: "1 portion of Vegetables",
+    handMethod: "Whole vegetable (cucumber size)",
+    imageSrc: "/images/cucumber.jpg",
+  },
+  {
+    id: "vegetables-portion-3",
+    foodType: "1 portion of Vegetables",
+    handMethod: "2-3 medium vegetables",
+    imageSrc: "/images/eggplants.jpg",
+  },
+  {
+    id: "vegetables-portion-4",
+    foodType: "1 portion of Vegetables",
+    handMethod: "2 medium carrots",
+    imageSrc: "/images/carrots.jpg",
+  },
+  {
+    id: "fruit-portion-1",
+    foodType: "1 portion of Fruit",
+    handMethod: "Closed fist (apple size)",
+    imageSrc: "/images/apple.jpg",
+  },
+  {
+    id: "fruit-portion-2",
+    foodType: "1 portion of Fruit",
+    handMethod: "Closed fist (orange size)",
+    imageSrc: "/images/orange.jpg",
+  },
+  {
+    id: "nuts-portion",
+    foodType: "1 portion of Nuts/Seeds",
+    handMethod: "Small handful (cupped palm)",
+    imageSrc: "/images/peanuts-handful.jpg",
+  },
+  {
+    id: "fats-portion",
+    foodType: "1 portion of Fats/Oils",
+    handMethod: "1 tablespoon",
+    imageSrc: "/images/oil-spoon.jpg",
   },
 ]
 
@@ -56,27 +98,27 @@ export default function PortionSizingGuide() {
               <path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"></path>
               <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
             </svg>
-            Grains, Swallows &amp; Vegetables Portion Guide
+            Complete Portion Guide
           </CardTitle>
           <CardDescription>
-            Learn to estimate proper portion sizes for grains and swallows using your hands
+            Learn to estimate proper portion sizes for all food groups using your hands and visual references
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {portionSizes.map((portion) => (
               <Card key={portion.id} className="border-2 hover:border-primary/50 transition-colors">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-center">{portion.foodType}</CardTitle>
+                  <CardTitle className="text-base md:text-lg text-center">{portion.foodType}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="aspect-square bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+                  <div className="aspect-square bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center p-4 text-center overflow-hidden">
                     <Image
                       src={portion.imageSrc || "/placeholder.svg"}
                       alt={`${portion.foodType} hand measurement`}
                       width={200}
                       height={200}
-                      className="object-cover rounded-lg"
+                      className="object-cover rounded-lg w-full h-full"
                     />
                   </div>
 
@@ -95,8 +137,9 @@ export default function PortionSizingGuide() {
           <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
             <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Portion Guide Instructions</h4>
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              Use these hand measurements to estimate proper portion sizes for grains, swallows, and vegetables in your
-              daily meals.
+              Use these visual references and hand measurements to estimate proper portion sizes for all food groups in
+              your daily meals. Remember that portion sizes may vary based on your individual nutritional needs and
+              activity level.
             </p>
           </div>
         </CardContent>
