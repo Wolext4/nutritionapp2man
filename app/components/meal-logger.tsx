@@ -174,30 +174,6 @@ export default function MealLogger({ onMealLogged }: MealLoggerProps = {}) {
     setSelectedFoods(updatedFoods)
   }
 
-  const decreaseQuantity = (foodId: string) => {
-    const updatedFoods = selectedFoods
-      .map((food) => {
-        if (food.id === foodId && food.quantity > 1) {
-          const newQuantity = food.quantity - 1
-          return {
-            ...food,
-            quantity: newQuantity,
-            calories: food.caloriesPerServing * newQuantity,
-            protein: food.proteinPerServing * newQuantity,
-            carbs: food.carbsPerServing * newQuantity,
-            fats: food.fatsPerServing * newQuantity,
-          }
-        }
-        return food
-      })
-      .filter((food) => food.quantity > 0)
-    setSelectedFoods(updatedFoods)
-  }
-
-  const removeFood = (foodId: string) => {
-    setSelectedFoods(selectedFoods.filter((f) => f.id !== foodId))
-  }
-
   const saveMeal = async () => {
     if (selectedFoods.length === 0) {
       setMessage({ type: "error", text: "Please add at least one food item" })
@@ -566,15 +542,6 @@ export default function MealLogger({ onMealLogged }: MealLoggerProps = {}) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 justify-end sm:justify-start">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => decreaseQuantity(food.id)}
-                      className="h-8 w-8 p-0"
-                      disabled={food.quantity <= 1}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
                     <span className="text-sm font-medium min-w-[2rem] text-center">{food.quantity}</span>
                     <Button
                       variant="outline"
@@ -583,14 +550,6 @@ export default function MealLogger({ onMealLogged }: MealLoggerProps = {}) {
                       className="h-8 w-8 p-0"
                     >
                       <Plus className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFood(food.id)}
-                      className="h-8 px-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-2 text-xs"
-                    >
-                      Remove
                     </Button>
                   </div>
                 </div>

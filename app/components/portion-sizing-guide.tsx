@@ -25,6 +25,12 @@ const portionSizes: PortionSize[] = [
     imageSrc: "/images/rice-spoon.jpg",
   },
   {
+    id: "bread-portion",
+    foodType: "1 portion of Bread",
+    handMethod: "1 slice (palm size)",
+    imageSrc: "/images/bread-slice.jpg",
+  },
+  {
     id: "vegetables-portion-1",
     foodType: "1 portion of Vegetables",
     handMethod: "Two cupped palms (leafy greens)",
@@ -71,6 +77,12 @@ const portionSizes: PortionSize[] = [
     foodType: "1 portion of Fats/Oils",
     handMethod: "1 tablespoon",
     imageSrc: "/images/oil-spoon.jpg",
+  },
+  {
+    id: "water-portion",
+    foodType: "1 serving of Water",
+    handMethod: "1 sachet (500ml) or 2 cups",
+    imageSrc: "/images/water-sachet.jpg",
   },
 ]
 

@@ -120,6 +120,15 @@ export interface SleepEntry {
   createdAt: string
 }
 
+export interface WaterIntake {
+  id: string
+  userId: string
+  date: string
+  amount: number // in milliliters
+  createdAt: string
+  updatedAt: string
+}
+
 // Storage keys
 const STORAGE_KEYS = {
   USERS: "naijafit_users",
@@ -131,6 +140,7 @@ const STORAGE_KEYS = {
   INITIALIZED: "naijafit_initialized",
   APP_SETTINGS: "naijafit_app_settings",
   SLEEP_ENTRIES: "naijafit_sleep_entries",
+  WATER_INTAKE: "naijafit_water_intake", // Added water intake storage key
 } as const
 
 // Utility functions
@@ -871,5 +881,66 @@ export class LocalDatabase {
 
     this.saveSleepEntries(entries)
     return { success: true, entry: newEntry }
+  }
+
+  // Water intake operations
+  static getWaterIntakes(): WaterIntake[] {
+    return getFromStorage<WaterIntake[]>(STORAGE_KEYS.WATER_INTAKE, [])
+  }
+
+  static saveWaterIntakes(intakes: WaterIntake[]): void {
+    setToStorage(STORAGE_KEYS.WATER_INTAKE, intakes)
+  }
+
+  static getWaterIntake(userId: string, date: string): WaterIntake | null {
+    const intakes = this.getWaterIntakes()
+    return intakes.find((i) => i.userId === userId && i.date === date) || null
+  }
+
+  static getUserWaterIntakes(userId: string, startDate?: string, endDate?: string): WaterIntake[] {
+    const intakes = this.getWaterIntakes()
+    let userIntakes = intakes.filter((i) => i.userId === userId)
+
+    if (startDate) {
+      userIntakes = userIntakes.filter((i) => i.date >= startDate)
+    }
+
+    if (endDate) {
+      userIntakes = userIntakes.filter((i) => i.date <= endDate)
+    }
+
+    return userIntakes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }
+
+  static async logWaterIntake(data: { userId: string; date: string; amount: number }): Promise<{
+    success: boolean
+    intake?: WaterIntake
+    error?: string
+  }> {
+    const intakes = this.getWaterIntakes()
+    const existingIndex = intakes.findIndex((i) => i.userId === data.userId && i.date === data.date)
+
+    const now = new Date().toISOString()
+
+    if (existingIndex >= 0) {
+      // Update existing entry
+      intakes[existingIndex].amount = data.amount
+      intakes[existingIndex].updatedAt = now
+      this.saveWaterIntakes(intakes)
+      return { success: true, intake: intakes[existingIndex] }
+    } else {
+      // Create new entry
+      const newIntake: WaterIntake = {
+        id: `water_${Date.now()}`,
+        userId: data.userId,
+        date: data.date,
+        amount: data.amount,
+        createdAt: now,
+        updatedAt: now,
+      }
+      intakes.push(newIntake)
+      this.saveWaterIntakes(intakes)
+      return { success: true, intake: newIntake }
+    }
   }
 }

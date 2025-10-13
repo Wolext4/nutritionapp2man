@@ -23,6 +23,7 @@ import {
   Shield,
   SheetIcon as SleepIcon,
   Dumbbell,
+  Droplets,
 } from "lucide-react"
 import { calculateBMI, getDailyCalorieRecommendation } from "../utils/calculations"
 import MealLogger from "./meal-logger"
@@ -34,10 +35,13 @@ import ProfileSettings from "./profile-settings"
 import AdminDashboard from "./admin-dashboard"
 import SleepTracker from "./sleep-tracker"
 import PhysicalActivities from "./physical-activities"
+import WaterTracker from "./water-tracker"
+import { LocalDatabase } from "@/lib/local-storage"
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
+  const [waterIntake, setWaterIntake] = useState(0)
 
   const today = new Date().toISOString().split("T")[0]
   const { meals: todaysMeals, deleteMeal, isLoading: mealsLoading, refetch } = useMeals(today)
@@ -45,8 +49,16 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeTab === "overview") {
       refetch()
+      loadWaterIntake()
     }
   }, [activeTab, refetch])
+
+  const loadWaterIntake = () => {
+    if (user) {
+      const waterData = LocalDatabase.getWaterIntake(user.id, today)
+      setWaterIntake(waterData?.amount || 0)
+    }
+  }
 
   if (!user) return null
 
@@ -274,19 +286,22 @@ export default function Dashboard() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm xs:text-base">Weight Goal</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm xs:text-base flex items-center gap-1 xs:gap-2">
+                    <Droplets className="h-3 w-3 xs:h-4 xs:w-4 text-blue-600" />
+                    Water Today
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1 xs:space-y-2">
-                    <div className="text-sm xs:text-base font-bold">
-                      {bmiResult.category === "Underweight"
-                        ? "Gain Weight"
-                        : bmiResult.category === "Overweight" || bmiResult.category === "Obese"
-                          ? "Lose Weight"
-                          : "Maintain"}
+                    <div className="text-lg xs:text-xl font-bold text-blue-600">{waterIntake}ml</div>
+                    <div className="text-xs text-muted-foreground">of 2000ml goal</div>
+                    <div className="w-full bg-secondary rounded-full h-1.5 xs:h-2">
+                      <div
+                        className="bg-blue-600 h-1.5 xs:h-2 rounded-full transition-all"
+                        style={{ width: `${Math.min((waterIntake / 2000) * 100, 100)}%` }}
+                      />
                     </div>
-                    <div className="text-xs text-muted-foreground">Current: {user.weight}kg</div>
                   </div>
                 </CardContent>
               </Card>
@@ -394,7 +409,10 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="log-meal">
-            <MealLogger onMealLogged={() => refetch()} />
+            <div className="space-y-4">
+              <MealLogger onMealLogged={() => refetch()} />
+              <WaterTracker onWaterLogged={() => loadWaterIntake()} />
+            </div>
           </TabsContent>
 
           <TabsContent value="bmi">
