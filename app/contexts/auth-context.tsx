@@ -16,6 +16,7 @@ interface AuthContextType {
     height: number
     weight: number
     waistCircumference?: number // Added optional waist circumference to signup interface
+    hipCircumference?: number // Added optional hip circumference to signup interface
   }) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   updateProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>
@@ -116,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     height: number
     weight: number
     waistCircumference?: number // Added waist circumference parameter
+    hipCircumference?: number // Added hip circumference parameter
   }) => {
     try {
       const result = await LocalDatabase.createUser(userData)

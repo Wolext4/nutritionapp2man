@@ -262,7 +262,7 @@ export default function Tutorial({ onComplete, onSkip }: TutorialProps) {
   const step = tutorialSteps[currentStep]
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 bg-background">
         <CardHeader className="relative bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white p-8">
           <Button

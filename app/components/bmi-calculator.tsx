@@ -15,18 +15,27 @@ export default function BMICalculator() {
   const [height, setHeight] = useState(user?.height.toString() || "")
   const [weight, setWeight] = useState(user?.weight.toString() || "")
   const [waistCircumference, setWaistCircumference] = useState(user?.waistCircumference?.toString() || "")
+  const [hipCircumference, setHipCircumference] = useState(user?.hipCircumference?.toString() || "")
   const [isUpdating, setIsUpdating] = useState(false)
 
   if (!user) return null
 
   const currentBMI = calculateBMI(user.weight, user.height)
-  const currentEnhanced = calculateEnhancedHealthMetrics(user.weight, user.height, user.waistCircumference)
+  const currentEnhanced = calculateEnhancedHealthMetrics(
+    user.weight,
+    user.height,
+    user.waistCircumference,
+    user.hipCircumference,
+    user.gender,
+  )
   const newMetrics =
     height && weight
       ? calculateEnhancedHealthMetrics(
           Number.parseFloat(weight),
           Number.parseFloat(height),
           waistCircumference ? Number.parseFloat(waistCircumference) : undefined,
+          hipCircumference ? Number.parseFloat(hipCircumference) : undefined,
+          user.gender,
         )
       : null
   const dailyCalories = getDailyCalorieRecommendation(user.age, user.gender, user.weight, user.height)
@@ -40,6 +49,7 @@ export default function BMICalculator() {
         height: Number.parseFloat(height),
         weight: Number.parseFloat(weight),
         waistCircumference: waistCircumference ? Number.parseFloat(waistCircumference) : undefined,
+        hipCircumference: hipCircumference ? Number.parseFloat(hipCircumference) : undefined,
       })
       alert("Profile updated successfully!")
     } catch (error) {
@@ -125,6 +135,26 @@ export default function BMICalculator() {
                   </p>
                 </div>
               )}
+              {user.waistCircumference && user.hipCircumference && currentEnhanced.whr && (
+                <div className="mt-4">
+                  <div className="text-2xl font-bold mb-1">{currentEnhanced.whr.ratio}</div>
+                  <Badge
+                    variant={currentEnhanced.whr.category === "Low Risk" ? "default" : "destructive"}
+                    className="mb-2"
+                  >
+                    {currentEnhanced.whr.category}
+                  </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Waist-to-Hip Ratio: {user.waistCircumference}cm / {user.hipCircumference}cm
+                  </p>
+                  <Badge
+                    variant={currentEnhanced.whr.waistCategory === "Low Risk" ? "default" : "destructive"}
+                    className="mt-2"
+                  >
+                    Waist: {currentEnhanced.whr.waistCategory}
+                  </Badge>
+                </div>
+              )}
             </div>
 
             <div>
@@ -135,6 +165,9 @@ export default function BMICalculator() {
                   <Badge className={getRiskColor(currentEnhanced.overallRisk)}>{currentEnhanced.overallRisk}</Badge>
                 </h4>
                 <p className="text-sm text-muted-foreground mb-3">{currentBMI.description}</p>
+                {currentEnhanced.whr && (
+                  <p className="text-sm text-muted-foreground mb-3 mt-2">{currentEnhanced.whr.description}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -160,7 +193,7 @@ export default function BMICalculator() {
           <CardDescription>Recalculate your health metrics with new measurements</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
               <Input
@@ -183,7 +216,7 @@ export default function BMICalculator() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="waist">Waist Circumference (cm)</Label>
+              <Label htmlFor="waist">Waist (cm)</Label>
               <Input
                 id="waist"
                 type="number"
@@ -192,17 +225,30 @@ export default function BMICalculator() {
                 onChange={(e) => setWaistCircumference(e.target.value)}
                 step="0.1"
               />
-              <p className="text-xs text-muted-foreground">Optional: Measure at narrowest point</p>
+              <p className="text-xs text-muted-foreground">At narrowest point</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hip">Hip (cm)</Label>
+              <Input
+                id="hip"
+                type="number"
+                placeholder="95"
+                value={hipCircumference}
+                onChange={(e) => setHipCircumference(e.target.value)}
+                step="0.1"
+              />
+              <p className="text-xs text-muted-foreground">At widest point</p>
             </div>
           </div>
 
           {newMetrics &&
             (height !== user.height.toString() ||
               weight !== user.weight.toString() ||
-              waistCircumference !== (user.waistCircumference?.toString() || "")) && (
+              waistCircumference !== (user.waistCircumference?.toString() || "") ||
+              hipCircumference !== (user.hipCircumference?.toString() || "")) && (
               <div className="border rounded-lg p-4 bg-muted/50">
                 <h4 className="font-medium mb-2">New Health Calculation:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <div className="flex items-center gap-4 mb-3">
                       <div className="text-2xl font-bold">{newMetrics.bmi.bmi}</div>
@@ -218,7 +264,24 @@ export default function BMICalculator() {
                           {newMetrics.waistToHeight.category}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">Waist-to-Height Ratio</p>
+                      <p className="text-sm text-muted-foreground">Waist-to-Height</p>
+                    </div>
+                  )}
+                  {newMetrics.whr && (
+                    <div>
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="text-2xl font-bold">{newMetrics.whr.ratio}</div>
+                        <Badge variant={newMetrics.whr.category === "Low Risk" ? "default" : "destructive"}>
+                          {newMetrics.whr.category}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Waist-to-Hip Ratio</p>
+                      <Badge
+                        variant={newMetrics.whr.waistCategory === "Low Risk" ? "default" : "destructive"}
+                        className="mt-2 text-xs"
+                      >
+                        Waist: {newMetrics.whr.waistCategory}
+                      </Badge>
                     </div>
                   )}
                 </div>
@@ -236,12 +299,80 @@ export default function BMICalculator() {
               isUpdating ||
               (height === user.height.toString() &&
                 weight === user.weight.toString() &&
-                waistCircumference === (user.waistCircumference?.toString() || ""))
+                waistCircumference === (user.waistCircumference?.toString() || "") &&
+                hipCircumference === (user.hipCircumference?.toString() || ""))
             }
             className="w-full bg-green-600 hover:bg-green-700"
           >
             {isUpdating ? "Updating..." : "Update Profile"}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Waist-to-Hip Ratio (WHR) Standards */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-purple-600" />
+            Waist-to-Hip Ratio (WHR) Standards
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950">
+              <div>
+                <div className="font-medium text-blue-600">Men - Low Risk</div>
+                <div className="text-sm text-muted-foreground">WHR ≤ 0.90</div>
+              </div>
+              <div className="text-sm text-muted-foreground">Healthy range</div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-red-600">Men - High Risk</div>
+                <div className="text-sm text-muted-foreground">WHR {">"} 0.90</div>
+              </div>
+              <div className="text-sm text-muted-foreground">Increased health risks</div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-pink-50 dark:bg-pink-950">
+              <div>
+                <div className="font-medium text-pink-600">Women - Low Risk</div>
+                <div className="text-sm text-muted-foreground">WHR ≤ 0.85</div>
+              </div>
+              <div className="text-sm text-muted-foreground">Healthy range</div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-red-600">Women - High Risk</div>
+                <div className="text-sm text-muted-foreground">WHR {">"} 0.85</div>
+              </div>
+              <div className="text-sm text-muted-foreground">Increased health risks</div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <h5 className="font-medium mb-2">Waist Circumference Thresholds</h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="font-medium mb-1">Men:</div>
+                <ul className="space-y-1 text-muted-foreground">
+                  <li>{"<"} 94 cm: Low risk</li>
+                  <li>94-99 cm: Increased risk</li>
+                  <li>≥ 100 cm: High risk</li>
+                </ul>
+              </div>
+              <div>
+                <div className="font-medium mb-1">Women:</div>
+                <ul className="space-y-1 text-muted-foreground">
+                  <li>{"<"} 80 cm: Low risk</li>
+                  <li>80-89 cm: Increased risk</li>
+                  <li>≥ 90 cm: High risk</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -330,9 +461,10 @@ export default function BMICalculator() {
             <div>
               <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-1">Important Note</h4>
               <p className="text-sm text-orange-700 dark:text-orange-300">
-                BMI is a general indicator and may not account for muscle mass, bone density, and other factors. For
-                personalized health advice, especially if you're in the underweight or obese categories, consult with a
-                healthcare professional or registered dietitian.
+                BMI and WHR are general indicators and may not account for muscle mass, bone density, and other factors.
+                Apple-shaped bodies (more fat around the waist) are associated with higher risks of cardiovascular
+                disease and type 2 diabetes. For personalized health advice, consult with a healthcare professional or
+                registered dietitian.
               </p>
             </div>
           </div>
