@@ -10,6 +10,7 @@ export interface User {
   height: number
   weight: number
   waistCircumference?: number // Added optional waist circumference field
+  hipCircumference?: number // Added hip circumference field
   location?: string
   occupation?: string
   healthConditions?: string[]
@@ -185,6 +186,7 @@ export class LocalDatabase {
         height: 165,
         weight: 68,
         waistCircumference: 75, // Added waist circumference to demo user
+        hipCircumference: 90, // Added hip circumference to demo user
         location: "Lagos, Nigeria",
         occupation: "Software Developer",
         healthConditions: [],
@@ -203,6 +205,7 @@ export class LocalDatabase {
         height: 170,
         weight: 70,
         waistCircumference: 80, // Added waist circumference to admin user
+        hipCircumference: 95, // Added hip circumference to admin user
         location: "Nigeria",
         occupation: "System Administrator",
         healthConditions: [],
@@ -340,6 +343,7 @@ export class LocalDatabase {
       height: userData.height,
       weight: userData.weight,
       waistCircumference: userData.waistCircumference, // Include waist circumference in new user creation
+      hipCircumference: userData.hipCircumference, // Include hip circumference in new user creation
       location: userData.location,
       occupation: userData.occupation,
       healthConditions: userData.healthConditions || [],
