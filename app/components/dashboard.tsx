@@ -71,7 +71,7 @@ export default function Dashboard() {
     <div className="min-h-screen-safe bg-background">
       <header className="border-b bg-card sticky top-0 z-50 pt-safe-top">
         <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-12 xs:h-14 bg-card">
+          <div className="flex items-center justify-between h-12 xs:h-14 bg-zinc-900">
             <div className="flex items-center gap-1 xs:gap-2">
               <Utensils className="h-5 w-5 xs:h-6 xs:w-6 text-green-600" />
               <h1 className="text-base xs:text-lg sm:text-xl font-bold text-green-800">GluGuide</h1>
