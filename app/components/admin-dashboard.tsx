@@ -10,14 +10,30 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { LocalDatabase, type User, type Meal } from "@/lib/local-storage"
-import { Upload, Users, FileText, BarChart3, Download, Eye, AlertCircle, CheckCircle } from "lucide-react"
+import { LocalDatabase, type User, type Meal, type ImportedUserData } from "@/lib/local-storage"
+import {
+  Upload,
+  Users,
+  FileText,
+  BarChart3,
+  Download,
+  Eye,
+  AlertCircle,
+  CheckCircle,
+  Trash2,
+  Calendar,
+  Activity,
+} from "lucide-react"
+import { useAuth } from "../contexts/auth-context"
 
 export default function AdminDashboard() {
+  const { user: currentUser } = useAuth()
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importStatus, setImportStatus] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [userMeals, setUserMeals] = useState<Meal[]>([])
+  const [selectedImportedData, setSelectedImportedData] = useState<ImportedUserData | null>(null)
+  const [importedDataList, setImportedDataList] = useState<ImportedUserData[]>(LocalDatabase.getImportedData())
 
   const users = LocalDatabase.getUsers().filter((u) => u.role === "user")
   const appStats = LocalDatabase.getAppStats()
@@ -30,15 +46,20 @@ export default function AdminDashboard() {
   }
 
   const processImport = async () => {
-    if (!importFile) return
+    if (!importFile || !currentUser) return
 
     try {
       const text = await importFile.text()
-      const result = await LocalDatabase.importUserData(text)
+      const result = await LocalDatabase.importUserDataForAdmin(text, currentUser.id)
 
       if (result.success) {
-        setImportStatus({ type: "success", message: "User data imported successfully!" })
+        setImportStatus({
+          type: "success",
+          message: "User data imported successfully! View it in the 'Imported Data' tab.",
+        })
         setImportFile(null)
+        // Refresh imported data list
+        setImportedDataList(LocalDatabase.getImportedData())
       } else {
         setImportStatus({ type: "error", message: result.error || "Import failed" })
       }
@@ -64,6 +85,24 @@ export default function AdminDashboard() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const viewImportedData = (data: ImportedUserData) => {
+    setSelectedImportedData(data)
+  }
+
+  const deleteImportedData = (id: string) => {
+    const result = LocalDatabase.deleteImportedData(id)
+    if (result.success) {
+      setImportedDataList(LocalDatabase.getImportedData())
+      if (selectedImportedData?.id === id) {
+        setSelectedImportedData(null)
+      }
+      setImportStatus({ type: "success", message: "Imported data deleted successfully" })
+      setTimeout(() => setImportStatus(null), 3000)
+    } else {
+      setImportStatus({ type: "error", message: result.error || "Failed to delete" })
+    }
   }
 
   return (
@@ -118,8 +157,8 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <Upload className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{appStats.totalProfiles}</p>
-                <p className="text-sm text-muted-foreground">User Profiles</p>
+                <p className="text-2xl font-bold">{importedDataList.length}</p>
+                <p className="text-sm text-muted-foreground">Imported Submissions</p>
               </div>
             </div>
           </CardContent>
@@ -129,6 +168,7 @@ export default function AdminDashboard() {
       <Tabs defaultValue="import" className="space-y-4">
         <TabsList>
           <TabsTrigger value="import">Import Data</TabsTrigger>
+          <TabsTrigger value="imported">Imported Data ({importedDataList.length})</TabsTrigger>
           <TabsTrigger value="users">Manage Users</TabsTrigger>
         </TabsList>
 
@@ -187,6 +227,235 @@ export default function AdminDashboard() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="imported" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Imported Data List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Imported Data Submissions</CardTitle>
+                <CardDescription>View all imported user nutrition data (Read-Only)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96">
+                  {importedDataList.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                      <FileText className="h-12 w-12 text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground">No imported data yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">Import user data files to view them here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {importedDataList.map((data) => (
+                        <div key={data.id} className="p-4 border rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{data.user.fullName}</p>
+                              <p className="text-sm text-muted-foreground">{data.user.email}</p>
+                            </div>
+                            <Badge variant="secondary">Read-Only</Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Imported: {new Date(data.importedAt).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Activity className="h-3 w-3" />
+                              {data.meals.length} meals logged
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => viewImportedData(data)}
+                              className="flex-1"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View Details
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteImportedData(data.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            {/* Imported Data Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Data Details (Read-Only)</CardTitle>
+                <CardDescription>
+                  {selectedImportedData
+                    ? `Viewing imported data for ${selectedImportedData.user.fullName}`
+                    : "Select imported data to view details"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedImportedData ? (
+                  <ScrollArea className="h-96">
+                    <div className="space-y-4">
+                      {/* Import Metadata */}
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Import Information</p>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                          <p>Imported: {new Date(selectedImportedData.importedAt).toLocaleString()}</p>
+                          <p>Original Export: {new Date(selectedImportedData.originalExportDate).toLocaleString()}</p>
+                          {selectedImportedData.metadata?.exportPeriod && (
+                            <p>
+                              Period: {selectedImportedData.metadata.exportPeriod.month}/
+                              {selectedImportedData.metadata.exportPeriod.year}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* User Information */}
+                      <div>
+                        <p className="font-medium mb-2">User Information</p>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="font-medium">Age</p>
+                            <p className="text-muted-foreground">{selectedImportedData.user.age} years</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Gender</p>
+                            <p className="text-muted-foreground capitalize">{selectedImportedData.user.gender}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Height</p>
+                            <p className="text-muted-foreground">{selectedImportedData.user.height} cm</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Weight</p>
+                            <p className="text-muted-foreground">{selectedImportedData.user.weight} kg</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Nutrition Summary */}
+                      {selectedImportedData.metadata?.summary && (
+                        <div>
+                          <p className="font-medium mb-2">Nutrition Summary</p>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Total Calories</p>
+                              <p className="font-medium">
+                                {selectedImportedData.metadata.summary.totalCalories.toFixed(0)} kcal
+                              </p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Avg Daily</p>
+                              <p className="font-medium">
+                                {selectedImportedData.metadata.summary.avgDailyCalories.toFixed(0)} kcal
+                              </p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Protein</p>
+                              <p className="font-medium">
+                                {selectedImportedData.metadata.summary.totalProtein.toFixed(1)}g
+                              </p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Carbs</p>
+                              <p className="font-medium">
+                                {selectedImportedData.metadata.summary.totalCarbs.toFixed(1)}g
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stats */}
+                      {selectedImportedData.stats && (
+                        <div>
+                          <p className="font-medium mb-2">User Statistics</p>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Total Meals</p>
+                              <p className="font-medium">{selectedImportedData.stats.totalMealsLogged}</p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Current Streak</p>
+                              <p className="font-medium">{selectedImportedData.stats.currentStreak} days</p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Longest Streak</p>
+                              <p className="font-medium">{selectedImportedData.stats.longestStreak} days</p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Favorite Food</p>
+                              <p className="font-medium text-xs">{selectedImportedData.stats.favoriteFood}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Meals */}
+                      <div>
+                        <p className="font-medium mb-2">Meal Logs ({selectedImportedData.meals.length} total)</p>
+                        <div className="space-y-2">
+                          {selectedImportedData.meals.slice(0, 10).map((meal) => (
+                            <div key={meal.id} className="p-3 bg-muted rounded-lg">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium capitalize">{meal.type}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {meal.date} at {meal.time}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary">{meal.totalNutrition.calories} cal</Badge>
+                              </div>
+                              <div className="mt-2">
+                                <p className="text-xs text-muted-foreground">
+                                  Foods: {meal.foods.map((f) => `${f.name} (${f.grams}g)`).join(", ")}
+                                </p>
+                              </div>
+                              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                                <div>
+                                  <span className="text-muted-foreground">Protein:</span>{" "}
+                                  {meal.totalNutrition.protein.toFixed(1)}g
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Carbs:</span>{" "}
+                                  {meal.totalNutrition.carbs.toFixed(1)}g
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Fats:</span>{" "}
+                                  {meal.totalNutrition.fats.toFixed(1)}g
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {selectedImportedData.meals.length > 10 && (
+                            <p className="text-xs text-muted-foreground text-center py-2">
+                              Showing 10 of {selectedImportedData.meals.length} meals
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="h-96 flex items-center justify-center text-muted-foreground">
+                    Select imported data from the list to view details
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">

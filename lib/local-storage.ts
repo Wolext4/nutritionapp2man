@@ -130,6 +130,33 @@ export interface WaterIntake {
   updatedAt: string
 }
 
+export interface ImportedUserData {
+  id: string
+  importedAt: string
+  importedBy: string // admin user id
+  originalExportDate: string
+  user: User
+  meals: Meal[]
+  profile: UserProfile | null
+  stats: UserStats | null
+  metadata?: {
+    exportPeriod?: {
+      month: number
+      year: number
+      startDate: string
+      endDate: string
+    }
+    totalMeals?: number
+    summary?: {
+      totalCalories: number
+      avgDailyCalories: number
+      totalProtein: number
+      totalCarbs: number
+      totalFats: number
+    }
+  }
+}
+
 // Storage keys
 const STORAGE_KEYS = {
   USERS: "naijafit_users",
@@ -141,7 +168,8 @@ const STORAGE_KEYS = {
   INITIALIZED: "naijafit_initialized",
   APP_SETTINGS: "naijafit_app_settings",
   SLEEP_ENTRIES: "naijafit_sleep_entries",
-  WATER_INTAKE: "naijafit_water_intake", // Added water intake storage key
+  WATER_INTAKE: "naijafit_water_intake",
+  IMPORTED_DATA: "naijafit_imported_data", // Added storage key for imported user data
 } as const
 
 // Utility functions
@@ -756,6 +784,45 @@ export class LocalDatabase {
     return JSON.stringify(exportData, null, 2)
   }
 
+  static async importUserDataForAdmin(
+    jsonData: string,
+    adminUserId: string,
+  ): Promise<{ success: boolean; error?: string; importedData?: ImportedUserData }> {
+    try {
+      const data = JSON.parse(jsonData)
+
+      if (!data.user) {
+        return { success: false, error: "Invalid data format: missing user information" }
+      }
+
+      // Create imported data record
+      const importedData: ImportedUserData = {
+        id: `import_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        importedAt: new Date().toISOString(),
+        importedBy: adminUserId,
+        originalExportDate: data.exportDate || new Date().toISOString(),
+        user: data.user,
+        meals: data.meals || [],
+        profile: data.profile || null,
+        stats: data.stats || null,
+        metadata: {
+          exportPeriod: data.exportPeriod,
+          totalMeals: data.totalMeals,
+          summary: data.summary,
+        },
+      }
+
+      // Store in imported data collection
+      const importedDataList = this.getImportedData()
+      importedDataList.push(importedData)
+      this.saveImportedData(importedDataList)
+
+      return { success: true, importedData }
+    } catch (error) {
+      return { success: false, error: "Invalid data format or corrupted file" }
+    }
+  }
+
   static async importUserData(jsonData: string): Promise<{ success: boolean; error?: string }> {
     try {
       const data = JSON.parse(jsonData)
@@ -811,6 +878,31 @@ export class LocalDatabase {
     } catch (error) {
       return { success: false, error: "Invalid data format" }
     }
+  }
+
+  static getImportedData(): ImportedUserData[] {
+    return getFromStorage<ImportedUserData[]>(STORAGE_KEYS.IMPORTED_DATA, [])
+  }
+
+  static saveImportedData(data: ImportedUserData[]): void {
+    setToStorage(STORAGE_KEYS.IMPORTED_DATA, data)
+  }
+
+  static getImportedDataById(id: string): ImportedUserData | null {
+    const importedData = this.getImportedData()
+    return importedData.find((d) => d.id === id) || null
+  }
+
+  static deleteImportedData(id: string): { success: boolean; error?: string } {
+    const importedData = this.getImportedData()
+    const filteredData = importedData.filter((d) => d.id !== id)
+
+    if (filteredData.length === importedData.length) {
+      return { success: false, error: "Imported data not found" }
+    }
+
+    this.saveImportedData(filteredData)
+    return { success: true }
   }
 
   // Get app statistics
